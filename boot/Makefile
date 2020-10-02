@@ -17,24 +17,32 @@
 # License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  #
 #########################################################################
 
-# @file .gitignore
+# @file Makefile
 # @author Ahmad Dajani <eng.adajani@gmail.com>
 # @date 2 Oct 2020
-# @brief File containing GIT ignore rules
+# @brief File containing Makefile rules to build stage 0 boot loader
+# @note The tool chains are 16 bit DOS
+# @note Create floppy image using *nix command: mkfs.msdos -h 32 -R 32 ./floppya.img
+# @note Copy boot.bin into first sector of floppy image
 
-# Build folder
-build/*
+AS=tasm
+ASFLAGS=/zi
+LD=tlink
+LDFLAGS=/v /k
+STRIP=tdstrip
+STRIPFLAGS=-c
+REN=ren
 
-# Backup files
-*.BAK
+objects=boot.obj
+build=..\build
 
-# Executables
-*.EXE
-*.BIN
-*.COM
+boot.bin: clean $(objects)
+    @$(LD) $(LDFLAGS) $(build)\$(objects)
+    @$(STRIP) $(STRIPFLAGS) $(build)\boot.exe
+    @$(REN) $(build)\boot.com $(build)\boot.bin
 
-# Linker output
-*.MAP
+boot.obj: boot.asm
+    $(AS) $(ASFLAGS) boot.asm $(build)\boot.obj
 
-# Object files
-*.OBJ
+clean:
+    erase $(build)\$(objects)

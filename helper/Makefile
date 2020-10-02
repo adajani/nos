@@ -17,24 +17,27 @@
 # License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  #
 #########################################################################
 
-# @file .gitignore
+# @file Makefile
 # @author Ahmad Dajani <eng.adajani@gmail.com>
 # @date 2 Oct 2020
-# @brief File containing GIT ignore rules
+# @brief File containing Makefile rules to build Trubo C helper functions
+# @note This build is dedicated for Turbo C
 
-# Build folder
-build/*
+AS=tasm
+ASFLAGS=/zi
 
-# Backup files
-*.BAK
+objects=N_SCOPY.obj N_LXMUL.obj
+build=..\build
 
-# Executables
-*.EXE
-*.BIN
-*.COM
+all: clean $(objects)
+    @
 
-# Linker output
-*.MAP
+N_SCOPY.obj: N_SCOPY.asm
+    $(AS) $(ASFLAGS) N_SCOPY.asm $(build)\N_SCOPY.OBJ
 
-# Object files
-*.OBJ
+N_LXMUL.obj: N_LXMUL.asm
+    $(AS) $(ASFLAGS) N_LXMUL.asm $(build)
+
+clean:
+    erase $(build)\N_SCOPY.obj
+    erase $(build)\N_LXMUL.obj

@@ -1,0 +1,71 @@
+#########################################################################
+# Copyright (C) 2020 by Ahmad Dajani                                    #
+#                                                                       #
+# This file is part of NOS.                                             #
+#                                                                       #
+# NOS is free software: you can redistribute it and/or modify it        #
+# under the terms of the GNU Lesser General Public License as published #
+# by the Free Software Foundation, either version 3 of the License, or  #
+# (at your option) any later version.                                   #
+#                                                                       #
+# NOS is distributed in the hope that it will be useful,                #
+# but WITHOUT ANY WARRANTY# without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU Lesser General Public License for more details.                   #
+#                                                                       #
+# You should have received a copy of the GNU Lesser General Public      #
+# License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  #
+#########################################################################
+
+# @file bochsrc.bxrc
+# @author Ahmad Dajani <eng.adajani@gmail.com>
+# @date 2 Oct 2020
+# @brief File containing Bochs emulator config file
+# @note Conside the floppies locatoin
+
+# how much memory the emulated machine will have
+megs: 16
+
+# filename of ROM images
+romimage: file=../BIOS-bochs-latest
+vgaromimage: file=../VGABIOS-lgpl-latest
+
+# what disk images will be used 
+floppya: 1_44=floppya.img, status=inserted
+#floppyb: 1_44=floppyb.img, status=inserted
+
+# hard disk
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-master: type=disk, path="hd10meg.img", cylinders=306, heads=4, spt=17
+
+# choose the boot disk.
+boot: a
+
+# default config interface is textconfig.
+#config_interface: textconfig
+#config_interface: wx
+
+#display_library: x
+# other choices: win32 sdl wx carbon amigaos beos macintosh nogui rfb term svga
+
+# where do we send log messages?
+log: bochsout.txt
+
+# disable the mouse, since DLX is text only
+mouse: enabled=0
+
+# set up IPS value and clock sync
+cpu: ips=15000000
+clock: sync=both
+
+# enable key mapping, using US layout as default.
+#
+# NOTE: In Bochs 1.4, keyboard mapping is only 100% implemented on X windows.
+# However, the key mapping tables are used in the paste function, so 
+# in the DLX Linux example I'm enabling keyboard_mapping so that paste 
+# will work.  Cut&Paste is currently implemented on win32 and X windows only.
+
+keyboard: keymap=../keymaps/x11-pc-us.map
+#keyboard: keymap=../keymaps/x11-pc-fr.map
+#keyboard: keymap=../keymaps/x11-pc-de.map
+#keyboard: keymap=../keymaps/x11-pc-es.map
