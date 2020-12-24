@@ -18,12 +18,12 @@ rem # You should have received a copy of the GNU Lesser General Public      #
 rem # License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  #
 rem #########################################################################
 
-rem @file set_path.bat
-rem @author Ahmad Dajani <eng.adajani@gmail.com>
-rem @date 2 Oct 2020
-rem @brief Add Turbo C compiler path into DOS path environment 
-rem @note call this batch file only once
+rem # @file run.bat
+rem # @author Ahmad Dajani <eng.adajani@gmail.com>
+rem # @date 24 Dec 2020
+rem # @brief Run NOS using Bochs emulator
+rem # @note BXSHARE environment variable that point to emulator directory
 
-echo Set NOS Path
-set path=%path%;c:\tc\bin
-set build_dir=build
+set BXSHARE=d:\Bochs-2.6.11
+
+%BXSHARE%\bochs.exe -q -f bochsrc.bxrc

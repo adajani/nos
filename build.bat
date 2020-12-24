@@ -1,3 +1,4 @@
+@echo off
 rem #########################################################################
 rem # Copyright (C) 2020 by Ahmad Dajani                                    #
 rem #                                                                       #
@@ -23,7 +24,6 @@ rem @date 2 Oct 2020
 rem @brief Build the entire source code for NOS project
 rem @note This batch will call Makefile in each directory
 
-@echo off
 echo Building NOS
 
 echo **** Boot ****
