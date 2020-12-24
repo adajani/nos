@@ -33,3 +33,14 @@ To run the floppy image, type the folowing command:
 bochs -q -f emulator\bochsrc.bxrc
 ```
 Note: you can use BXSHARE to set BIOS/VGA path...
+
+## Tool-chains
+
+| Name    | Version  | Note  |
+| :---:   | :---:    | :---: |
+| Tcc     | 3.00     | Turbo C/C++ compiler |
+| Tlink   | 7.1.30.1 | Turbo Link (linker) |
+| Make    | 4.0      | Turbo make (Makefile) |
+| Tdstrip | 5.0      | Turbo symbol table stripper (e.g objdump) |
+| Tasm    | 4.1      | Turbo assembler |
+| Bochs   | 2.6.11   | x86 emulator |

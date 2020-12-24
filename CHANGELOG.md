@@ -6,4 +6,5 @@
 - Makefile infrastructure
 - Build batch
 - Kernel entry
-
+- Adding Bochs emulator configuration files
+- Update README.md to reflect the tool-chains version
