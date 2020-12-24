@@ -24,6 +24,7 @@
 
 # Build folder
 build/*
+!build/.gitkeep
 
 # Emulator folder
 emulator/bochsout.txt
