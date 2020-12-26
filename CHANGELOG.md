@@ -1,3 +1,17 @@
+## [0.0.2] - 2020-12-25
+### Added
+- libc(conio): setTextcolor
+- libc(conio): setActivePage
+- libc(conio): setCursorPosition
+- libc(conio): getCursorPosition
+- libc(conio): clearScreen
+- libc(conio): printCharacter
+- libc(conio): printString
+- libc(conio): convertIntegerToString
+- libc(conio): printFormat
+- libc(conio): readCharacter
+- libc(conio): readString
+
 ## [0.0.1] - 2020-10-02
 ### Added
 - Support 16 bit Borland compiler/assembler tool chains

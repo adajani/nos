@@ -17,32 +17,60 @@
 * License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  *
 ************************************************************************/
 
-/*@file main.c
+/*@file conio.h
 * @author Ahmad Dajani <eng.adajani@gmail.com>
-* @date 2 Oct 2020
-* @brief Main kernel
-* @note maximum file size is 32 sectors (16KB)
-* @see c0t.asm
+* @date 25 Dec 2020
+* @brief Console input/output header file
 */
-#include <conio.h>
 
-extern int _heap_start;
+#ifndef __CONIO_H
+    #define __CONIO_H
 
-void main() {
-    #define SIZE 100
-    unsigned char *p;
-    //                   size  actual  buffer  null
-    unsigned char buffer[1+    1+      SIZE+      1 ]={SIZE};
+    #define BLINK_COLOR 128
+    #define MAKE_COLOR(BACKGROUND, FORGROUND) (BACKGROUND << 4 | FORGROUND)
+    #define CONSOLE_LINE_FEED 10
+    #define CONSOLE_CARRIAGE_RETURN 13
+    #define CONSOLE_BACKSPACE 8
+    
+    #define SCREEN_WIDTH 80
+    #define SCREEN_HEIGHT 25
 
-    clearScreen();
-    printFormat("Welcome to NOS, (c)%d By Ahmad Dajani\n", 2020);
+    enum COLORS {
+        /* dark colors */
+        BLACK,
+        BLUE,
+        GREEN,
+        CYAN,
+        RED,
+        MAGENTA,
+        BROWN,
+        LIGHTGRAY,
 
-    while(1) {
-        printFormat("%%");
-        p = readString(buffer);
-        printFormat("\n\t your command is [%s]\n", p);
-        if(p[0]=='x') break;
-    }
-    printFormat("\nBye:)\n");
-    asm hlt
-}
+        /* light colors */
+        DARKGRAY,
+        LIGHTBLUE,
+        LIGHTGREEN,
+        LIGHTCYAN,
+        LIGHTRED,
+        LIGHTMAGENTA,
+        YELLOW,
+        WHITE
+    };
+
+    enum CursorPosition {
+        ROW,
+        COLUMN
+    };
+
+    void setTextcolor(unsigned char newcolor);
+    void setActivePage(unsigned char page);
+    void setCursorPosition(unsigned char row, unsigned char column);
+    unsigned char getCursorPosition(unsigned char type);
+    void clearScreen(void);
+    void printCharacter(unsigned char character);
+    void printString(char *string);
+    char *convertIntegerToString(unsigned int num, int base);
+    void printFormat(char* format, ...);
+    unsigned char readCharacter(void);
+    unsigned char *readString(unsigned char *string);
+#endif

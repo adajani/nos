@@ -19,38 +19,18 @@
 
 # @file Makefile
 # @author Ahmad Dajani <eng.adajani@gmail.com>
-# @date 2 Oct 2020
-# @brief File containing Makefile rules to build 16 bit OS kernel
+# @date 26 Dec 2020
+# @brief File containing Makefile rules to build libc
 # @note The tool chains are 16 bit DOS
-# @note c0t.obj must be linked as the first module
 
 CC=tcc
 CFLAGS=-1 -K- -k -mt -N- -w -w-amp -g1 -j1 -v -y -c -I..\include -L..\lib
-AS=tasm
-ASFLAGS=/zi
-LD=tlink
-LDFLAGS=/v /k
-STRIP=tdstrip
-STRIPFLAGS=-c
-REN=ren
 
-objects=c0t.obj main.obj
+objects=conio.obj
 build=..\build
 
-kernel.bin: clean $(objects)
-    $(LD) $(LDFLAGS) $(build)\c0t.obj \
-                     $(build)\N_SCOPY.obj \
-                     $(build)\conio.obj \
-                     $(build)\main.obj
-    $(STRIP) $(STRIPFLAGS) $(build)\c0t.exe $(build)\$@
-    @$(REN) $(build)\c0t.com $(build)\c0t.bin
-
-c0t.obj: c0t.asm
-    $(AS) $(ASFLAGS) c0t.asm $(build)\$@
-
-main.obj: main.c
-    $(CC) $(CFLAGS) -o$(build)\$@ main.c 
+conio.obj: conio.c
+    $(CC) $(CFLAGS) -o$(build)\$@ conio.c
 
 clean:
-    erase $(build)\c0t.obj
-    erase $(build)\main.obj
+    erase $(build)\conio.obj

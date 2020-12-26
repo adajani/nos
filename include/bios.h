@@ -17,32 +17,17 @@
 * License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  *
 ************************************************************************/
 
-/*@file main.c
+/*@file stdarg.h
 * @author Ahmad Dajani <eng.adajani@gmail.com>
-* @date 2 Oct 2020
-* @brief Main kernel
-* @note maximum file size is 32 sectors (16KB)
-* @see c0t.asm
+* @date 25 Dec 2020
+* @brief x86 Bios definitions header file
 */
-#include <conio.h>
 
-extern int _heap_start;
+#ifndef __BIOS_H
+    #define __BIOS_H
 
-void main() {
-    #define SIZE 100
-    unsigned char *p;
-    //                   size  actual  buffer  null
-    unsigned char buffer[1+    1+      SIZE+      1 ]={SIZE};
-
-    clearScreen();
-    printFormat("Welcome to NOS, (c)%d By Ahmad Dajani\n", 2020);
-
-    while(1) {
-        printFormat("%%");
-        p = readString(buffer);
-        printFormat("\n\t your command is [%s]\n", p);
-        if(p[0]=='x') break;
-    }
-    printFormat("\nBye:)\n");
-    asm hlt
-}
+    #define CALL_VIDEO_BIOS() asm int 0x10
+    #define CALL_MEMORY_BIOS() asm int 0x12
+    #define CALL_DISKETTE_BIOS() asm int 0x13
+    #define CALL_KEYBOARD_BIOS() asm int 0x16
+#endif

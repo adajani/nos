@@ -22,8 +22,7 @@
 ; @date 2 Oct 2020
 ; @brief File containing the startup routines for OS kernel
 ;
-; This simple OS boot loader is based on reading specific number of sectors,
-; which represent the kernel (code/data). Then execute the kernel.
+; The kernel is tiny model (cs=ss=ds)
 ;
 
 extrn _main

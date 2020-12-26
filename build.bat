@@ -36,6 +36,11 @@ cd helper
     make
 cd ..
 
+echo **** Libc ****
+cd libc
+    make
+cd ..
+
 echo **** Kernel ****
 cd kernel
     make

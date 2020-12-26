@@ -17,32 +17,23 @@
 * License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  *
 ************************************************************************/
 
-/*@file main.c
+/*@file stdarg.h
 * @author Ahmad Dajani <eng.adajani@gmail.com>
-* @date 2 Oct 2020
-* @brief Main kernel
-* @note maximum file size is 32 sectors (16KB)
-* @see c0t.asm
+* @date 25 Dec 2020
+* @brief Standard argument header file
 */
-#include <conio.h>
 
-extern int _heap_start;
+#ifndef __STDARG_H
+    #define __STDARG_H
 
-void main() {
-    #define SIZE 100
-    unsigned char *p;
-    //                   size  actual  buffer  null
-    unsigned char buffer[1+    1+      SIZE+      1 ]={SIZE};
+    #ifndef NULL
+        #define NULL 0
+    #endif
 
-    clearScreen();
-    printFormat("Welcome to NOS, (c)%d By Ahmad Dajani\n", 2020);
+    typedef void *va_list;
 
-    while(1) {
-        printFormat("%%");
-        p = readString(buffer);
-        printFormat("\n\t your command is [%s]\n", p);
-        if(p[0]=='x') break;
-    }
-    printFormat("\nBye:)\n");
-    asm hlt
-}
+    #define __size(x)           ((sizeof(x)+sizeof(int)-1) & ~(sizeof(int)-1))
+    #define va_start(ap, parmN) ((void)((ap) = (va_list)((char *)(&parmN)+__size(parmN))))
+    #define va_arg(ap, type)    (*(type *)(((*(char **)&(ap))+=__size(type))-(__size(type))))
+    #define va_end(ap)          ((void)NULL)
+#endif
