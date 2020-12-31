@@ -45,4 +45,4 @@ boot.obj: boot.asm
     $(AS) $(ASFLAGS) boot.asm $(build)\boot.obj
 
 clean:
-    erase $(build)\$(objects)
+    erase $(build)\boot.*

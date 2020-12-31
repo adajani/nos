@@ -1,5 +1,5 @@
 ;[]-----------------------------------------------------------------[]
-;|      N_LXMUL.ASM -- long multiply routine                         |
+;|      F_LXMUL.ASM -- long multiply routine                         |
 ;[]-----------------------------------------------------------------[]
 
 ;
@@ -31,17 +31,19 @@
 ;               hi(lo(arg1) * lo(arg2))
 ; lo(result) := lo(lo(arg1) * lo(arg2))
 ;
-
+;
 _TEXT   SEGMENT BYTE PUBLIC 'CODE'
         ASSUME  CS:_TEXT
 
-        public  N_LXMUL@
+        public  LXMUL@
+        public  F_LXMUL@
 
-N_LXMUL@        PROC    NEAR
+LXMUL@          PROC    FAR
+F_LXMUL@:
                 push    si
-                xchg    si, ax          ; save lo1
-                xchg    ax, dx
-                test    ax, ax          ; skip mul if hi1==0
+                xchg    si,ax           ; save lo1
+                xchg    ax,dx
+                test    ax,ax           ; skip mul if hi1==0
                 jz      nohi1
                 mul     bx              ; hi1 * lo2
 
@@ -51,11 +53,11 @@ nohi1:          ; if we jumped here, ax==0 so the following swap works
                 mul     si              ; lo1 * hi2
                 add     ax, cx          ; ax = hi1*lo2 + hi2*lo1
 nohi2:
-                xchg    ax, si
+                xchg    ax,si
                 mul     bx              ; lo1 * lo2
-                add     dx, si          ; hi order result += partials
+                add     dx,si           ; hi order result += partials
                 pop     si
                 ret
-N_LXMUL@        ENDP
+LXMUL@          ENDP
 _TEXT   ENDS
         END

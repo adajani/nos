@@ -1,3 +1,10 @@
+## [0.0.3] - 2020-12-31
+### Added
+- Kernel conventinal memory manager: kmalloc, kfree
+- Turbo C helper functions
+- libc(string): memset
+- libc(string): movedata
+
 ## [0.0.2] - 2020-12-25
 ### Added
 - libc(conio): setTextcolor

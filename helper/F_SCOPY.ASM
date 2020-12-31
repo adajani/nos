@@ -1,5 +1,5 @@
 ;[]-----------------------------------------------------------------[]
-;|      N_SCOPY.ASM -- near struct copy routine                      |
+;|      F_SCOPY.ASM -- far struct copy routine                       |
 ;[]-----------------------------------------------------------------[]
 
 ;
@@ -22,16 +22,18 @@
 _TEXT           SEGMENT
                 ASSUME  CS:_TEXT
 
-                public  N_SCOPY@
+                public  SCOPY@
+                public  F_SCOPY@
 
-N_SCOPY@:
+SCOPY@:
+F_SCOPY@:
                 push    bp
                 mov     bp,sp
                 push    si
                 push    di
                 push    ds
-                lds     si,dword ptr 4[bp]
-                les     di,dword ptr 8[bp]
+                lds     si,dword ptr 6[bp]
+                les     di,dword ptr 10[bp]
                 cld
                 shr     cx, 1
                 rep     movsw
@@ -41,7 +43,7 @@ N_SCOPY@:
                 pop     di
                 pop     si
                 pop     bp
-                ret     8
+                retf    8
 
 _TEXT           ENDS
                 END

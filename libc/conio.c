@@ -91,6 +91,37 @@ unsigned char readCharacter(void) {
     return _AL;
 }
 
+int convertStringToInteger(char *string) {
+    int result = 0;
+    int sign = 1;
+
+    if(*string=='-') {
+        sign = -1;
+        string++;
+    }
+
+    while((*string) && (*string >= '0') && (*string <= '9')) {
+        result = (result * 10) + ((*string) - '0');
+        string++;
+    }
+    return sign * result;
+}
+
+unsigned int convertHexStringToInteger(unsigned char *hexNumber) {
+    unsigned int result = 0;
+    while(*hexNumber) {
+        unsigned char byte = *hexNumber++;
+        if(byte >= '0' && byte <= '9') {
+            byte = byte - '0';
+        }
+        else if((byte >= 'a' || byte >= 'A') && (byte <='f' || byte <='F')){
+            byte = byte - 'a' + 10;
+        }
+        result = (result << 4) | (byte & 0xF);
+    }
+    return result;
+}
+
 char *convertIntegerToString(unsigned int num, int base) {
     /* e.g itoa */
     #define MAX_CONVERT_BUFFER 5 /* max integer is 65535, ffff */

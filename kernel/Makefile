@@ -34,23 +34,32 @@ STRIP=tdstrip
 STRIPFLAGS=-c
 REN=ren
 
-objects=c0t.obj main.obj
+objects=c0t.obj memory.obj main.obj
+helper=$(build)\helper.lib
+libs= $(build)\conio.obj \
+     $(build)\string.obj
 build=..\build
 
 kernel.bin: clean $(objects)
     $(LD) $(LDFLAGS) $(build)\c0t.obj \
-                     $(build)\N_SCOPY.obj \
-                     $(build)\conio.obj \
+                     $(helper)\
+                     $(libs) \
+                     $(build)\memory.obj \
                      $(build)\main.obj
+
     $(STRIP) $(STRIPFLAGS) $(build)\c0t.exe $(build)\$@
     @$(REN) $(build)\c0t.com $(build)\c0t.bin
 
 c0t.obj: c0t.asm
     $(AS) $(ASFLAGS) c0t.asm $(build)\$@
 
+memory.obj: memory.c
+    $(CC) $(CFLAGS) -o$(build)\$@ memory.c
+
 main.obj: main.c
-    $(CC) $(CFLAGS) -o$(build)\$@ main.c 
+    $(CC) $(CFLAGS) -o$(build)\$@ main.c
 
 clean:
     erase $(build)\c0t.obj
     erase $(build)\main.obj
+    erase $(build)\memory.obj

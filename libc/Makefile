@@ -26,11 +26,18 @@
 CC=tcc
 CFLAGS=-1 -K- -k -mt -N- -w -w-amp -g1 -j1 -v -y -c -I..\include -L..\lib
 
-objects=conio.obj
+objects=conio.obj string.obj
 build=..\build
+
+all: $(objects)
 
 conio.obj: conio.c
     $(CC) $(CFLAGS) -o$(build)\$@ conio.c
 
+string.obj: string.c
+    $(CC) $(CFLAGS) -o$(build)\$@ string.c
+
+
 clean:
     erase $(build)\conio.obj
+    erase $(build)\string.obj

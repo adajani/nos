@@ -31,7 +31,7 @@ emulator/bochsout.txt
 emulator/bx_enh_dbg.ini
 emulator/floppya.img
 emulator/hd10meg.img
-
+emulator/*.img.lock
 # Backup files
 *.BAK
 
@@ -45,3 +45,7 @@ emulator/hd10meg.img
 
 # Object files
 *.OBJ
+
+#Turbo Debugger
+*.TR
+*.TD

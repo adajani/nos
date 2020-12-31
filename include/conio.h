@@ -70,6 +70,8 @@
     void printCharacter(unsigned char character);
     void printString(char *string);
     char *convertIntegerToString(unsigned int num, int base);
+    int convertStringToInteger(char *string);
+    unsigned int convertHexStringToInteger(unsigned char *hexNumber);
     void printFormat(char* format, ...);
     unsigned char readCharacter(void);
     unsigned char *readString(unsigned char *string);

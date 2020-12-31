@@ -26,9 +26,9 @@
 ;
 
 extrn _main
-public __heap_start
+public __heapStart
 
-KERNEL_STAK_SIZE EQU 512
+KERNEL_STAK_SIZE EQU 1024
 
 DGROUP group _text, _data, _bss, _stack
 
@@ -45,9 +45,10 @@ _text segment byte public USE16 'code'
                 lea bx, stack_label
                 add bx, KERNEL_STAK_SIZE
                 mov sp, bx
+                ;Safe area
                 inc bx
                 ;Heap start right after the stack
-                mov __heap_start, bx
+                mov __heapStart, bx
             sti
 
             call near ptr _main
@@ -56,7 +57,7 @@ _text segment byte public USE16 'code'
 _text ends
 
 _data segment word public 'DATA'
-    __heap_start dw ?
+    __heapStart dw ?
 _data ends
 
 _bss segment word public 'BSS'
