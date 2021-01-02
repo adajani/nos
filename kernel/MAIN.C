@@ -83,7 +83,7 @@ void main() {
     printFormat("Testing interrupt:\n");
     _AX = 0xaabb;
     asm {
-        int NOS_INTR
+        int KERNEL_INTERRUPT
     }
     printFormat("Interrupt return value %x\n", _CX);
 
