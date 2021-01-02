@@ -24,11 +24,13 @@
 ;
 ; The kernel is tiny model (cs=ss=ds)
 ;
-
 extrn _main
+public _bootDrive
 public __heapStart
+public DGROUP@
 
-KERNEL_STAK_SIZE EQU 1024
+;Stack size in bytes
+KERNEL_STAK_SIZE equ 1024
 
 DGROUP group _text, _data, _bss, _stack
 
@@ -37,10 +39,15 @@ _text segment byte public USE16 'code'
     assume cs:DGROUP, ds:DGROUP, ss:DGROUP
     kernel_entry proc near
         jmp short kernel_main
-        ;TODO add kernel data structure
+        ;TODO: add kernel header
 
         kernel_main:
             cli
+                mov _bootDrive, dl
+
+                mov dx, ds
+                mov DGROUP@, dx
+
                 ;Stack address is calculated to start right after the BSS section
                 lea bx, stack_label
                 add bx, KERNEL_STAK_SIZE
@@ -57,7 +64,10 @@ _text segment byte public USE16 'code'
 _text ends
 
 _data segment word public 'DATA'
+    _bootDrive db ?
     __heapStart dw ?
+    ; Turbo C stuff: used inside interrupt function
+    DGROUP@ dw ?
 _data ends
 
 _bss segment word public 'BSS'

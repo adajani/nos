@@ -24,7 +24,7 @@
 * @see c0t.asm
 */
 
-#include <kmem.h>
+#include <kernel/memory.h>
 #include <bios.h> /* CALL_MEMORY_BIOS */
 #include <math.h> /* abs */
 #include <conio.h> /* printFormat */

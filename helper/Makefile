@@ -27,6 +27,7 @@ AS=tasm
 ASFLAGS=/zi /d__TINY__
 LIB=TLIB
 LIBFLAGS=/C
+LIBNAME=helper
 
 objects=F_LXMUL.obj F_SCOPY.obj FTOL.obj H_LDIV.obj \
         H_LLSH.obj H_LRSH.obj H_LURSH.obj H_SPUSH.obj \
@@ -34,16 +35,16 @@ objects=F_LXMUL.obj F_SCOPY.obj FTOL.obj H_LDIV.obj \
 build=..\build
 
 all: clean $(objects)
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\F_LXMUL.obj
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\F_SCOPY.obj
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\FTOL.obj
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\H_LDIV.obj
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\H_LLSH.obj
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\H_LRSH.obj
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\H_LURSH.obj
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\H_SPUSH.obj
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\N_LXMUL.obj
-    $(LIB) $(LIBFLAGS) $(build)\helper +$(build)\N_SCOPY.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\F_LXMUL.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\F_SCOPY.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\FTOL.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\H_LDIV.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\H_LLSH.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\H_LRSH.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\H_LURSH.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\H_SPUSH.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\N_LXMUL.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\N_SCOPY.obj
 
 F_LXMUL.obj: F_LXMUL.asm
     $(AS) $(ASFLAGS) F_LXMUL.asm $(build)
@@ -76,7 +77,7 @@ N_SCOPY.obj: N_SCOPY.asm
     $(AS) $(ASFLAGS) N_SCOPY.asm $(build)\N_SCOPY.OBJ
 
 clean:
-    erase $(build)\helper.lib
+    erase $(build)\$(LIBNAME).lib
     erase $(build)\F_LXMUL.obj
     erase $(build)\F_SCOPY.obj
     erase $(build)\FTOL.obj

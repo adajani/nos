@@ -24,10 +24,12 @@
 * @note maximum file size is 32 sectors (16KB)
 * @see c0t.asm
 */
-#include <kmem.h>
+#include <kernel/memory.h> /* kmalloc, kfree */
+#include <kernel/service.h> /* NOS_INTR, initializeInterrupt */
 #include <conio.h> /* printFormat */
 #include <string.h> /* memset, size_t */
 extern unsigned int _heapStart; /* file: c0t.asm */
+extern unsigned char bootDrive; /* file: c0t.asm */
 
 void main() {
     #define SIZE 100
@@ -43,6 +45,7 @@ void main() {
 
     printFormat("Starting NOS, (c)%d By Ahmad Dajani\n", 2020);
     initializeMemory(_heapStart);
+    initializeInterrupt();
 
     /* create MCB */
     printFormat("Memory test\n");
@@ -75,6 +78,15 @@ void main() {
     }
     printFormat("Allocate 0x200 @ %x:%x\n", FP_SEG(address), FP_OFF(address));
     memset(address, '!', 0x200);
+
+    //interrupt
+    printFormat("Testing interrupt:\n");
+    _AX = 0xaabb;
+    asm {
+        int NOS_INTR
+    }
+    printFormat("Interrupt return value %x\n", _CX);
+
 
     /* Main memory tester */
     while(1) {

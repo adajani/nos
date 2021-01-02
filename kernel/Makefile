@@ -30,28 +30,31 @@ AS=tasm
 ASFLAGS=/zi
 LD=tlink
 LDFLAGS=/v /k
-STRIP=tdstrip
-STRIPFLAGS=-c
+STRIP=exe2bin
+#0x60 is the kernel load segment (relocate)
+STRIPFLAGS=-l=0x60
 REN=ren
 
-objects=c0t.obj memory.obj main.obj
-helper=$(build)\helper.lib
-libs= $(build)\conio.obj \
-     $(build)\string.obj
+objects=c0t.obj memory.obj service.obj main.obj
+helper=helper.lib
+libc=libc.lib
 build=..\build
 
 kernel.bin: clean $(objects)
     $(LD) $(LDFLAGS) $(build)\c0t.obj \
-                     $(helper)\
-                     $(libs) \
+                     $(build)\$(helper) \
+                     $(build)\$(libc) \
                      $(build)\memory.obj \
+                     $(build)\service.obj \
                      $(build)\main.obj
-
     $(STRIP) $(STRIPFLAGS) $(build)\c0t.exe $(build)\$@
     @$(REN) $(build)\c0t.com $(build)\c0t.bin
 
 c0t.obj: c0t.asm
     $(AS) $(ASFLAGS) c0t.asm $(build)\$@
+
+service.obj: service.c
+    $(CC) $(CFLAGS) -o$(build)\$@ service.c
 
 memory.obj: memory.c
     $(CC) $(CFLAGS) -o$(build)\$@ memory.c
@@ -60,6 +63,8 @@ main.obj: main.c
     $(CC) $(CFLAGS) -o$(build)\$@ main.c
 
 clean:
+    erase $(build)\kernel.bin
     erase $(build)\c0t.obj
     erase $(build)\main.obj
     erase $(build)\memory.obj
+    erase $(build)\service.obj

@@ -1,3 +1,9 @@
+## [0.0.4] - 2021-1-2
+### Added
+- Kernel interrupt handler
+- libc(vector): setInterruptVector
+- libc(string): getInterruptVector
+
 ## [0.0.3] - 2020-12-31
 ### Added
 - Kernel conventinal memory manager: kmalloc, kfree

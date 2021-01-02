@@ -25,11 +25,17 @@
 
 CC=tcc
 CFLAGS=-1 -K- -k -mt -N- -w -w-amp -g1 -j1 -v -y -c -I..\include -L..\lib
+LIB=TLIB
+LIBFLAGS=/C
+LIBNAME=libc
 
-objects=conio.obj string.obj
+objects=conio.obj string.obj vector.obj
 build=..\build
 
-all: $(objects)
+all: clean $(objects)
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\conio.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\string.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\vector.obj
 
 conio.obj: conio.c
     $(CC) $(CFLAGS) -o$(build)\$@ conio.c
@@ -37,7 +43,11 @@ conio.obj: conio.c
 string.obj: string.c
     $(CC) $(CFLAGS) -o$(build)\$@ string.c
 
+vector.obj: vector.c
+    $(CC) $(CFLAGS) -o$(build)\$@ vector.c
 
 clean:
+    erase $(build)\$(LIBNAME).lib
     erase $(build)\conio.obj
     erase $(build)\string.obj
+    erase $(build)\vector.obj
