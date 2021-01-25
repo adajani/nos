@@ -17,30 +17,15 @@
 * License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  *
 ************************************************************************/
 
-/*@file service.c
+/*@file version.h
 * @author Ahmad Dajani <eng.adajani@gmail.com>
-* @date 2 Jan 2020
-* @brief Kernel interrupt service source file
-* @see c0t.asm
+* @date 5 Jan 2020
+* @brief Kernel version header file
 */
-#include <kernel/service.h>
-#include <kernel/version.h> /* MAJOR_VERSION, MINOR_VERSION */
-#include <conio.h> /* printFormat */
-#include <vector.h> /* setInterruptVector */
 
-void initializeInterrupt(void) {
-    setInterruptVector(KERNEL_INTERRUPT, kernelInterruptHandler);
-}
-
-#pragma argsused
-static void interrupt kernelInterruptHandler(unsigned int BP, unsigned int DI, unsigned int SI, unsigned int DS,
-                                             unsigned int ES, unsigned int DX, unsigned int CX, unsigned int BX,
-                                             unsigned int AX, unsigned int IP, unsigned int CS, unsigned int FLAGS) {
-    switch(AX >> 8) { /* AH */
-        /* return kernel version in cx */
-        case 0: CX = (MAJOR_VERSION << 8) + MINOR_VERSION;
-                break;
-
-        /* TODO: add more services :) */
-    }
-}
+#ifndef __VERSION_H
+    #define __VERSION_H
+    #define MAJOR_VERSION 0
+    #define MINOR_VERSION 5
+    #define COPY_RIGHT "(c)2020 By Ahmad Dajani, eng.adajani@gmail.com"
+#endif

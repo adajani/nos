@@ -1,3 +1,8 @@
+## [0.0.5] - 2021-1-5
+### Added
+- Fix boot drive (boot sector)
+- BIOS disk I/O with LBA support
+
 ## [0.0.4] - 2021-1-2
 ### Added
 - Kernel interrupt handler

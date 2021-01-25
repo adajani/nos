@@ -46,7 +46,7 @@ _Text SEGMENT PUBLIC USE16
             InitStack STACK_ADDRESS
 
             ;Save boot drive
-            mov byte ptr cs:bs.DriveNumber, dl
+            mov bs.DriveNumber, dl
 
             PrintMessage msgLoading
 
@@ -71,7 +71,7 @@ _Text SEGMENT PUBLIC USE16
             jne KernelError
             ;TODO more checks
 
-            Run_Kernel KERNEL_SEGMENT, byte ptr cs:bs.DriveNumber
+            Run_Kernel KERNEL_SEGMENT, bs.DriveNumber
 
             include error.inc
         _main endp

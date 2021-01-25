@@ -34,24 +34,39 @@ STRIP=exe2bin
 #0x60 is the kernel load segment (relocate)
 STRIPFLAGS=-l=0x60
 REN=ren
+LIB=TLIB
+LIBFLAGS=/C
+LIBNAME=kernel
 
-objects=c0t.obj memory.obj service.obj main.obj
+objects=c0t.obj memory.obj service.obj disk.obj fat12.obj main.obj
 helper=helper.lib
 libc=libc.lib
+kernelLib=kernel.lib
 build=..\build
 
 kernel.bin: clean $(objects)
+    #note: I added kernel into lib to avoid dos limitation (argument too long!)
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\memory.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\service.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\disk.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\fat12.obj
+
     $(LD) $(LDFLAGS) $(build)\c0t.obj \
                      $(build)\$(helper) \
                      $(build)\$(libc) \
-                     $(build)\memory.obj \
-                     $(build)\service.obj \
+                     $(build)\$(kernelLib) \
                      $(build)\main.obj
     $(STRIP) $(STRIPFLAGS) $(build)\c0t.exe $(build)\$@
     @$(REN) $(build)\c0t.com $(build)\c0t.bin
 
 c0t.obj: c0t.asm
     $(AS) $(ASFLAGS) c0t.asm $(build)\$@
+
+disk.obj: disk.c
+    $(CC) $(CFLAGS) -o$(build)\$@ disk.c
+
+fat12.obj: fat12.c
+    $(CC) $(CFLAGS) -o$(build)\$@ fat12.c
 
 service.obj: service.c
     $(CC) $(CFLAGS) -o$(build)\$@ service.c
@@ -68,3 +83,6 @@ clean:
     erase $(build)\main.obj
     erase $(build)\memory.obj
     erase $(build)\service.obj
+    erase $(build)\disk.obj
+    erase $(build)\fat12.obj
+    erase $(build)\$(kernelLib)

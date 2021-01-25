@@ -56,11 +56,11 @@ endm
 ; @param[in] bootDrive boot drive number (8 bit)
 ; @return
 Run_Kernel macro kSegment, bootDrive
+    mov dl, bootDrive
     mov ax, kSegment
     mov es, ax
     mov ds, ax
     mov ss, ax
-    mov dl, bootDrive
     ;Far jump to kernel using retf
     push es
     push 0h

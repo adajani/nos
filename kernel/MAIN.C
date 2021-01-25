@@ -26,12 +26,17 @@
 */
 #include <kernel/memory.h> /* kmalloc, kfree */
 #include <kernel/service.h> /* NOS_INTR, initializeInterrupt */
+#include <kernel/fat12.h> /* initializeFileSystem */
+#include <kernel/disk.h> /* initializeDisk */
+#include <kernel/version.h> /* MAJOR_VERSION, MINOR_VERSION, COPY_RIGHT */
 #include <conio.h> /* printFormat */
 #include <string.h> /* memset, size_t */
+
 extern unsigned int _heapStart; /* file: c0t.asm */
 extern unsigned char bootDrive; /* file: c0t.asm */
 
 void main() {
+#if 0
     #define SIZE 100
     unsigned char *p;
     unsigned char far *address = NULL;
@@ -42,11 +47,67 @@ void main() {
     int i;
     /*                   size  actual  buffer  null */
     unsigned char buffer[1+    1+      SIZE+      1 ]={SIZE};
+#endif
+    unsigned char far *buffer = NULL;
+    int status;
+    unsigned int lba;
+    unsigned char numberOfSectors = 1;
 
-    printFormat("Starting NOS, (c)%d By Ahmad Dajani\n", 2020);
+    printFormat("Starting NOS v%d.%d, %s\n", MAJOR_VERSION, MINOR_VERSION, COPY_RIGHT);
     initializeMemory(_heapStart);
     initializeInterrupt();
+    initializeDisk(bootDrive);
+    initializeFileSystem();
 
+    buffer = (unsigned char far *) kmalloc(numberOfSectors * SECTOR_SIZE);
+    printFormat("Buffer @ %x:%x\n", FP_SEG(buffer), FP_OFF(buffer));
+
+    /* 1. read */
+    lba = 0;
+    printFormat("Reading %d sector(s) at lba %d (boot sector)\n", numberOfSectors, lba);
+    status = DiskOperationLBA(READ, numberOfSectors, lba, bootDrive, buffer);
+    if(status == FAILURE) {
+        printFormat("Read Error\n");
+    } else {
+        printFormat("Read success\n");
+        printFormat("Check read buffer: ");
+        if(buffer[0]==0xeb && buffer[1]==0x3c &&
+           buffer[510]==0x55 && buffer[511]==0xaa
+        ) {
+            printFormat("pass\n");
+        } else {
+            printFormat("fail\n");
+        }
+    }
+
+    /* 2. write & read */
+    lba = 100;
+    memset(buffer,'+', SECTOR_SIZE);
+    buffer[511] = '-';
+
+    printFormat("Writing %s sector(s) at lba %d\n", numberOfSectors, lba);
+    status = DiskOperationLBA(WRITE, numberOfSectors, lba, bootDrive, buffer);
+    if(status == FAILURE) {
+        printFormat("Write Error\n");
+    } else {
+        printFormat("Write success\n");
+        memset(buffer, NULL, 512);
+        printFormat("Read back lba %d\n", lba);
+        status = DiskOperationLBA(READ, numberOfSectors, lba, bootDrive, buffer);
+        if(status == FAILURE) {
+            printFormat("Read back Error\n");
+        } else {
+            printFormat("Read back success\n");
+            printFormat("Check read buffer: ");
+            if(buffer[0] == '+' && buffer[200] == '+' && buffer[511] == '-') {
+                printFormat("pass\n");
+            } else {
+                printFormat("fail\n");
+            }
+        }
+    }
+
+#if 0
     /* create MCB */
     printFormat("Memory test\n");
     for(i=0; i<9; i++) {
@@ -113,6 +174,6 @@ void main() {
         if(p[0]=='x') break;
     }
     printFormat("\nBye:)\n");
-
+#endif
     asm hlt
 }

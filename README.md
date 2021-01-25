@@ -42,5 +42,6 @@ Note: you can use BXSHARE to set BIOS/VGA path...
 | Tlink   | 7.1.30.1 | Turbo Link (linker) |
 | Make    | 4.0      | Turbo make (Makefile) |
 | Tdstrip | 5.0      | Turbo symbol table stripper (e.g objdump) |
+| Exe2bin | 1.5      | Binary converter (relocate segment) |
 | Tasm    | 4.1      | Turbo assembler |
 | Bochs   | 2.6.11   | x86 emulator |
