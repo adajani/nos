@@ -17,37 +17,29 @@
 # License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  #
 #########################################################################
 
-# @file .gitignore
+# @file Makefile
 # @author Ahmad Dajani <eng.adajani@gmail.com>
-# @date 2 Oct 2020
-# @brief File containing GIT ignore rules
+# @date 26 Jan 2021
+# @brief File containing Makefile rules to build image writer tool
+# @note The tool uses Turbo C library based on DOS (small memory model)
 
-# Build folder
-build/*
-!build/.gitkeep
+TCPATH=c:\tc
+CC=tcc
+CFLAGS=-ms -g1 -j1 -c -I$(TCPATH)\include
+LD=tlink
+LDFLAGS=/L$(TCPATH)\lib
+objects=imgwrt.obj
+build=..\..\build
 
-# Emulator folder
-emulator/bochsout.txt
-emulator/bx_enh_dbg.ini
-emulator/floppya.img
-emulator/hd10meg.img
-emulator/*.img.lock
-emulator/temp
+imgwrt.exe: clean $(objects)
+    $(LD) $(LDFLAGS) c0s.obj \
+                     $(build)\imgwrt.obj, \
+                     $(build)\$@,, \
+                     cs.lib maths.lib emu.lib
 
-# Backup files
-*.BAK
+imgwrt.obj: imgwrt.c
+    $(CC) $(CFLAGS) -o$(build)\$@ imgwrt.c
 
-# Executables
-*.EXE
-*.BIN
-*.COM
-
-# Linker output
-*.MAP
-
-# Object files
-*.OBJ
-
-#Turbo Debugger
-*.TR
-*.TD
+clean:
+    erase $(build)\imgwrt.exe
+    erase $(build)\imgwrt.obj

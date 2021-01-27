@@ -1,3 +1,7 @@
+## [0.0.6] - 2021-1-27
+### Added
+- Disk image writer
+
 ## [0.0.5] - 2021-1-5
 ### Added
 - Fix boot drive (boot sector)

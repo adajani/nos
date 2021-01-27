@@ -26,6 +26,13 @@ rem @note This batch will call Makefile in each directory
 
 echo Building NOS
 
+echo **** Tools ****
+cd tools
+    cd imgwrt
+        make
+    cd ..
+cd ..
+
 echo **** Boot ****
 cd boot
     make
@@ -44,6 +51,12 @@ cd ..
 echo **** Kernel ****
 cd kernel
     make
+cd ..
+
+echo **** Floppy image ****
+cd build
+    imgwrt.exe -img ..\emulator\floppya.img -lba 0 -file boot.bin
+    imgwrt.exe -img ..\emulator\floppya.img -lba 1 -file kernel.bin
 cd ..
 
 echo **** DONE ****
