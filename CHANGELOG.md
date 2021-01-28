@@ -1,4 +1,4 @@
-## [0.0.6] - 2021-1-28
+## [0.0.7] - 2021-1-28
 ### Added
 - libc(conio): inPortByte
 - libc(conio): inPortWord
