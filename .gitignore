@@ -33,6 +33,7 @@ emulator/floppya.img
 emulator/hd10meg.img
 emulator/*.img.lock
 emulator/temp
+emulator/log.txt
 
 # Backup files
 *.BAK

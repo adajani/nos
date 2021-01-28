@@ -28,6 +28,13 @@
     #define __SERVICE_H
 
     #define KERNEL_INTERRUPT 87
+
+    enum KERNEL_API {
+        API_KERNEL_VERSION = 0,
+        API_MALLOC = 1,
+        API_FREE = 2
+    };
+
     void initializeInterrupt(void);
     void interrupt kernelInterruptHandler(unsigned int BP, unsigned int DI, unsigned int SI, unsigned int DS,
                                           unsigned int ES, unsigned int DX, unsigned int CX, unsigned int BX,

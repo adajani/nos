@@ -53,30 +53,29 @@ void main() {
     unsigned int lba;
     unsigned char numberOfSectors = 1;
 
-    printFormat("Starting NOS v%d.%d, %s\n", MAJOR_VERSION, MINOR_VERSION, COPY_RIGHT);
+    printFormat(STDOUT, "Starting NOS v%d.%d, %s\n", MAJOR_VERSION, MINOR_VERSION, COPY_RIGHT);
     initializeMemory(_heapStart);
+    initializeFileSystem(bootDrive);
     initializeInterrupt();
-    initializeDisk(bootDrive);
-    initializeFileSystem();
 
     buffer = (unsigned char far *) kmalloc(numberOfSectors * SECTOR_SIZE);
-    printFormat("Buffer @ %x:%x\n", FP_SEG(buffer), FP_OFF(buffer));
+    printFormat(LOGGER, "Buffer @ %x:%x\n", FP_SEG(buffer), FP_OFF(buffer));
 
     /* 1. read */
     lba = 0;
-    printFormat("Reading %d sector(s) at lba %d (boot sector)\n", numberOfSectors, lba);
+    printFormat(LOGGER, "Reading %d sector(s) at lba %d (boot sector)\n", numberOfSectors, lba);
     status = DiskOperationLBA(READ, numberOfSectors, lba, bootDrive, buffer);
     if(status == FAILURE) {
-        printFormat("Read Error\n");
+        printFormat(LOGGER, "Read Error\n");
     } else {
-        printFormat("Read success\n");
-        printFormat("Check read buffer: ");
+        printFormat(LOGGER, "Read success\n");
+        printFormat(LOGGER, "Check read buffer: ");
         if(buffer[0]==0xeb && buffer[1]==0x3c &&
            buffer[510]==0x55 && buffer[511]==0xaa
         ) {
-            printFormat("pass\n");
+            printFormat(LOGGER, "pass\n");
         } else {
-            printFormat("fail\n");
+            printFormat(LOGGER, "fail\n");
         }
     }
 
@@ -85,95 +84,95 @@ void main() {
     memset(buffer,'+', SECTOR_SIZE);
     buffer[511] = '-';
 
-    printFormat("Writing %s sector(s) at lba %d\n", numberOfSectors, lba);
+    printFormat(LOGGER, "Writing %s sector(s) at lba %d\n", numberOfSectors, lba);
     status = DiskOperationLBA(WRITE, numberOfSectors, lba, bootDrive, buffer);
     if(status == FAILURE) {
-        printFormat("Write Error\n");
+        printFormat(LOGGER, "Write Error\n");
     } else {
-        printFormat("Write success\n");
+        printFormat(LOGGER, "Write success\n");
         memset(buffer, NULL, 512);
-        printFormat("Read back lba %d\n", lba);
+        printFormat(LOGGER, "Read back lba %d\n", lba);
         status = DiskOperationLBA(READ, numberOfSectors, lba, bootDrive, buffer);
         if(status == FAILURE) {
-            printFormat("Read back Error\n");
+            printFormat(LOGGER, "Read back Error\n");
         } else {
-            printFormat("Read back success\n");
-            printFormat("Check read buffer: ");
+            printFormat(LOGGER, "Read back success\n");
+            printFormat(LOGGER, "Check read buffer: ");
             if(buffer[0] == '+' && buffer[200] == '+' && buffer[511] == '-') {
-                printFormat("pass\n");
+                printFormat(LOGGER, "pass\n");
             } else {
-                printFormat("fail\n");
+                printFormat(LOGGER, "fail\n");
             }
         }
     }
 
 #if 0
     /* create MCB */
-    printFormat("Memory test\n");
+    printFormat(STDOUT, "Memory test\n");
     for(i=0; i<9; i++) {
         address = (unsigned char far *) kmalloc(0xffffL);
         if(!address) {
-            printFormat("Error: no memory\n");
+            printFormat(LOGGER, "Error: no memory\n");
             asm hlt;
         }
-        printFormat("Allocate 0xffff bytes @ %x:%x\n", FP_SEG(address), FP_OFF(address));
+        printFormat(STDOUT, "Allocate 0xffff bytes @ %x:%x\n", FP_SEG(address), FP_OFF(address));
         memset(address, 'a' + i, 0xffff);
     }
 
     address = (unsigned char far *) kmalloc(0x98d4);
     if(!address) {
-        printFormat("\nError: no memory");
+        printFormat(LOGGER, "\nError: no memory");
         asm hlt;
     }
-    printFormat("Allocate 0x98d4 @ %x:%x\n", FP_SEG(address), FP_OFF(address));
+    printFormat(STDOUT, "Allocate 0x98d4 @ %x:%x\n", FP_SEG(address), FP_OFF(address));
     memset(address, '$', 0x98d4);
 
     /* Free */
-    printFormat("Free address %x:%x\n", FP_SEG(address), FP_OFF(address));
+    printFormat(STDOUT, "Free address %x:%x\n", FP_SEG(address), FP_OFF(address));
     kfree(address);
 
     address = (unsigned char far *) kmalloc(0x200);
     if(!address) {
-        printFormat("\nError: no memory");
+        printFormat(LOGGER, "\nError: no memory");
         asm hlt;
     }
-    printFormat("Allocate 0x200 @ %x:%x\n", FP_SEG(address), FP_OFF(address));
+    printFormat(STDOUT, "Allocate 0x200 @ %x:%x\n", FP_SEG(address), FP_OFF(address));
     memset(address, '!', 0x200);
 
     //interrupt
-    printFormat("Testing interrupt:\n");
+    printFormat(STDOUT, "Testing interrupt:\n");
     _AX = 0xaabb;
     asm {
         int KERNEL_INTERRUPT
     }
-    printFormat("Interrupt return value %x\n", _CX);
+    printFormat(STDOUT, "Interrupt return value %x\n", _CX);
 
 
     /* Main memory tester */
     while(1) {
-        printFormat("\nEnter segment in hex:");
+        printFormat(STDOUT, "\nEnter segment in hex:");
         p = readString(buffer);
         segment = convertHexStringToInteger(p);
 
-        printFormat("\nEnter offset in hex:");
+        printFormat(STDOUT, "\nEnter offset in hex:");
         p = readString(buffer);
         offset = convertHexStringToInteger(p);
 
-        printFormat("\nEnter value in hex:");
+        printFormat(STDOUT, "\nEnter value in hex:");
         p = readString(buffer);
         value = convertHexStringToInteger(p);
 
-        printFormat("\nEnter size in hex:");
+        printFormat(STDOUT, "\nEnter size in hex:");
         p = readString(buffer);
         size = convertHexStringToInteger(p);
 
         address = MK_FP(segment, offset);
         memset(address, value, size);
-        printFormat("\n-------> DONE");
+        printFormat(STDOUT, "\n-------> DONE");
 
         if(p[0]=='x') break;
     }
-    printFormat("\nBye:)\n");
+    printFormat(STDOUT, "\nBye:)\n");
 #endif
     asm hlt
 }

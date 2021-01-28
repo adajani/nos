@@ -35,6 +35,11 @@
     #define SCREEN_WIDTH 80
     #define SCREEN_HEIGHT 25
 
+    enum PRINT_STREAM {
+        STDOUT = 0, /* print on console */
+        LOGGER = 1 /* print on Bochs console log */
+    };
+
     enum COLORS {
         /* dark colors */
         BLACK,
@@ -67,12 +72,16 @@
     void setCursorPosition(unsigned char row, unsigned char column);
     unsigned char getCursorPosition(unsigned char type);
     void clearScreen(void);
-    void printCharacter(unsigned char character);
-    void printString(char *string);
     char *convertIntegerToString(unsigned int num, int base);
     int convertStringToInteger(char *string);
     unsigned int convertHexStringToInteger(unsigned char *hexNumber);
-    void printFormat(char* format, ...);
+    void printCharacter(enum PRINT_STREAM stream, unsigned char character);
+    void printString(enum PRINT_STREAM stream, char *string);
+    void printFormat(enum PRINT_STREAM stream, char* format, ...);
     unsigned char readCharacter(void);
     unsigned char *readString(unsigned char *string);
+    unsigned char inPortByte(unsigned int portNumber);
+    unsigned int inPortWord(unsigned int portNumber);
+    void outPortByte(unsigned int portNumber, unsigned char value);
+    void outPortWord(unsigned int portNumber, unsigned int value);
 #endif

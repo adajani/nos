@@ -26,4 +26,4 @@ rem # @note BXSHARE environment variable that point to emulator directory
 
 set BXSHARE=d:\Bochs-2.6.11
 
-%BXSHARE%\bochsdbg.exe -q -f bochsrc_debug.bxrc
+%BXSHARE%\bochsdbg.exe -q -f bochsrc_debug.bxrc > log.txt

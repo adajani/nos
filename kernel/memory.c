@@ -74,9 +74,9 @@ void initializeMemory(unsigned int heapStart) {
     remainChunkSize = (unsigned int)(totalMemory % 0xffffL);
 
     #ifdef KMEM_DEBUG
-    printFormat("initialize memory:\n");
-    printFormat("\tKernel heap start @ %x:%x\n", _CS, heapStart);
-    printFormat("\tprobe %d chuncks with size %x. remainChunkSize is %x\n", chunkSize, 0xffff, remainChunkSize);
+    printFormat(LOGGER, "initialize memory:\n");
+    printFormat(LOGGER, "\tKernel heap start @ %x:%x\n", _CS, heapStart);
+    printFormat(LOGGER, "\tprobe %d chuncks with size %x. remainChunkSize is %x\n", chunkSize, 0xffff, remainChunkSize);
     #endif
 
     currentAddress = startAddress;
@@ -109,7 +109,7 @@ void far *kmalloc(unsigned long size) {
         currentMemoryControlBlock->magic = KMALLOC_PRIME_MAGIC;
 
         #ifdef KMEM_DEBUG
-        printFormat("kmalloc: create new struct\n");
+        printFormat(LOGGER, "kmalloc: create new struct\n");
         #endif
 
         newAddress = convertLinearAddressToFarPointer(initializedAddress + sizeof(struct MemoryControlBlock));
@@ -129,7 +129,7 @@ void far *kmalloc(unsigned long size) {
             currentMemoryControlBlock->size = size;
 
             #ifdef KMEM_DEBUG
-            printFormat("kmalloc: use struct\n");
+            printFormat(LOGGER, "kmalloc: use struct\n");
             #endif
 
             currentAddress += sizeof(struct MemoryControlBlock);
@@ -158,7 +158,7 @@ void kfree(void far *address) {
 
     if(currentMemoryControlBlock->magic != KMALLOC_PRIME_MAGIC) {
         #ifdef KMEM_DEBUG
-        printFormat("kfree: invalid MCB header\n");
+        printFormat(LOGGER, "kfree: invalid MCB header\n");
         #endif
         return;
     }

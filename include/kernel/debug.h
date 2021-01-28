@@ -17,38 +17,16 @@
 * License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  *
 ************************************************************************/
 
-/*@file service.c
+/*@file debug.h
 * @author Ahmad Dajani <eng.adajani@gmail.com>
-* @date 2 Jan 2020
-* @brief Kernel interrupt service source file
-* @see c0t.asm
+* @date 28 Jan 2021
+* @brief Debugging macros for Bochs emulator
 */
-#include <kernel/service.h>
-#include <kernel/version.h> /* MAJOR_VERSION, MINOR_VERSION */
-#include <conio.h> /* printFormat */
-#include <vector.h> /* setInterruptVector */
 
-void initializeInterrupt(void) {
-    setInterruptVector(KERNEL_INTERRUPT, kernelInterruptHandler);
-}
+#ifndef __KERNEL_DEBUG_H
+    #define __KERNEL_DEBUG_H
+    #include <conio.h> /* outPortWord */
 
-#pragma argsused
-static void interrupt kernelInterruptHandler(unsigned int BP, unsigned int DI, unsigned int SI, unsigned int DS,
-                                             unsigned int ES, unsigned int DX, unsigned int CX, unsigned int BX,
-                                             unsigned int AX, unsigned int IP, unsigned int CS, unsigned int FLAGS) {
-    switch(AX >> 8) { /* AH */
-        case API_KERNEL_VERSION:
-            CX = (MAJOR_VERSION << 8) + MINOR_VERSION;
-            break;
-
-        case API_MALLOC:
-            /* TODO */
-            break;
-
-        case API_FREE:
-            /* TODO */
-            break;
-
-        /* TODO: add filesystem API */
-    }
-}
+    /* Stops simulation and breaks into the debug console */
+    #define DebugBreak() outPortWord(0x8A00, 0x8A00); outPortWord(0x8A00, 0x08AE0);
+#endif

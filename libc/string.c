@@ -42,7 +42,10 @@ void memset(void far *address, char value, size_t size) {
 
 void movedata(unsigned SourceSegment, unsigned SourceOffset,
               unsigned DestinationSegment, unsigned DestinationOffset, size_t size) {
-    /* Turbo C will push ds when calling, so no need to save it */
+    asm {
+        push ds
+        push es
+    }
     _CX = size;
     _DS = SourceSegment;
     _SI = SourceOffset;
@@ -52,5 +55,7 @@ void movedata(unsigned SourceSegment, unsigned SourceOffset,
     asm {
         cld
         rep movsb
+        pop es
+        pop ds
     }
 }

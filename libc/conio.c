@@ -67,21 +67,29 @@ void clearScreen(void) {
     setCursorPosition(0, 0);
 }
 
-void printCharacter(unsigned char character) {
-    _AH = 0xe;
-    _AL = character;
-    _BH = consoleActivePage;
-    CALL_VIDEO_BIOS();
-    if(character == CONSOLE_LINE_FEED) {
-        /* \n -> \n\r */
-        _AL = CONSOLE_CARRIAGE_RETURN;
-        CALL_VIDEO_BIOS();
+void printCharacter(enum PRINT_STREAM stream, unsigned char character) {
+    switch(stream) {
+        case STDOUT:
+            _AH = 0xe;
+            _AL = character;
+            _BH = consoleActivePage;
+            CALL_VIDEO_BIOS();
+            if(character == CONSOLE_LINE_FEED) {
+                /* convert \n into \n\r */
+                _AL = CONSOLE_CARRIAGE_RETURN;
+                CALL_VIDEO_BIOS();
+            }
+            break;
+
+        case LOGGER:
+            outPortByte(0xe9, character);
+            break;
     }
 }
 
-void printString(char *string) {
+void printString(enum PRINT_STREAM stream, char *string) {
     while(*string) {
-        printCharacter(*string++);
+        printCharacter(stream, *string++);
     }
 }
 
@@ -140,7 +148,7 @@ char *convertIntegerToString(unsigned int num, int base) {
     return ptr;
 }
 
-void printFormat(char* format, ...) {
+void printFormat(enum PRINT_STREAM stream, char* format, ...) {
     register char *character;
     register char *string;
     register int integer;
@@ -150,34 +158,34 @@ void printFormat(char* format, ...) {
 
     for(character = format; *character != NULL; character++) {
         if(*character != '%') {
-            printCharacter(*character);
+            printCharacter(stream, *character);
         }
         else {
             character++; /* skip % */
             switch(*character) {
                 case 'c' :  integer = va_arg(arg, char);
-                            printCharacter((char)integer);
+                            printCharacter(stream, (char)integer);
                             break;
 
                 case 's':   string = va_arg(arg, char *);
-                            printString(string);
+                            printString(stream, string);
                             break;
 
                 case 'd' :  integer = va_arg(arg, int);
                             if(integer < 0) {
                                 integer = -integer;
-                                printCharacter('-');
+                                printCharacter(stream, '-');
                             }
-                            printString(convertIntegerToString(integer, 10));
+                            printString(stream, convertIntegerToString(integer, 10));
                             break;
 
                 case 'o':   integer = va_arg(arg, unsigned int);
-                            printString(convertIntegerToString(integer, 8));
+                            printString(stream, convertIntegerToString(integer, 8));
                             break;
 
 
                 case 'x':   integer = va_arg(arg, unsigned int);
-                            printString(convertIntegerToString(integer, 16));
+                            printString(stream, convertIntegerToString(integer, 16));
                             break;
             }
         }
@@ -222,7 +230,7 @@ unsigned char *readString(unsigned char *string) {
             }
 
             setCursorPosition(currentRow, currentColumn);
-            printCharacter(' ');
+            printCharacter(STDOUT, ' ');
             setCursorPosition(currentRow, currentColumn);
 
             actualLength--;
@@ -234,7 +242,7 @@ unsigned char *readString(unsigned char *string) {
         }
         else if(character >=' ' && character <= '~') {
             if(actualLength < maximumLength) {
-                printCharacter(character);
+                printCharacter(STDOUT, character);
                 stringPointer[actualLength] = character;
                 actualLength++;
             }
@@ -243,4 +251,30 @@ unsigned char *readString(unsigned char *string) {
 
     string[1] = (unsigned char)actualLength;
     return stringPointer;
+}
+
+unsigned char inPortByte(unsigned int portNumber) {
+    _DX = portNumber;
+    _AX = 0;
+    asm in al, dx
+    return _AL;
+}
+
+unsigned int inPortWord(unsigned int portNumber) {
+    _DX = portNumber;
+    _AX = 0;
+    asm in ax, dx
+    return _AX;
+}
+
+void outPortByte(unsigned int portNumber, unsigned char value) {
+    _DX = portNumber;
+    _AL = value;
+    asm out dx, al
+}
+
+void outPortWord(unsigned int portNumber, unsigned int value) {
+    _DX = portNumber;
+    _AX = value;
+    asm out dx, ax
 }

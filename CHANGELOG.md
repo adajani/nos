@@ -1,6 +1,21 @@
+## [0.0.6] - 2021-1-28
+### Added
+- libc(conio): inPortByte
+- libc(conio): inPortWord
+- libc(conio): outPortByte
+- libc(conio): outPortWord
+- kernel(Fat12): basic implementation
+- Adding kernel logger
+### Fixed
+- libc(string): movedata [data segment]
+### Modified
+- libc(conio): printFormat [output stream]
+- libc(conio): printString [output stream]
+- libc(conio): printCharacter [output stream]
+
 ## [0.0.6] - 2021-1-27
 ### Added
-- Disk image writer
+- Tool: Disk image writer
 
 ## [0.0.5] - 2021-1-5
 ### Added
