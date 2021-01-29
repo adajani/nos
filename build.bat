@@ -53,10 +53,4 @@ cd kernel
     make
 cd ..
 
-echo **** Floppy image ****
-cd build
-    imgwrt.exe -img ..\emulator\floppya.img -lba 0 -file boot.bin
-    imgwrt.exe -img ..\emulator\floppya.img -lba 1 -file kernel.bin
-cd ..
-
 echo **** DONE ****

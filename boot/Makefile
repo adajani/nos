@@ -32,14 +32,17 @@ LDFLAGS=/v /k
 STRIP=tdstrip
 STRIPFLAGS=-c
 REN=ren
+IMAGE_TOOL=imgwrt.exe
 
 objects=boot.obj
 build=..\build
+image_path=..\emulator
 
 boot.bin: clean $(objects)
     @$(LD) $(LDFLAGS) $(build)\$(objects)
     @$(STRIP) $(STRIPFLAGS) $(build)\boot.exe
     @$(REN) $(build)\boot.com $(build)\boot.bin
+    @$(build)\$(IMAGE_TOOL) -img $(image_path)\floppya.img -lba 0 -file $(build)\boot.bin
 
 boot.obj: boot.asm
     $(AS) $(ASFLAGS) boot.asm $(build)\boot.obj

@@ -26,7 +26,7 @@
 #include <kernel/fat12.h>
 #include <kernel/disk.h> /* DiskOperationLBA */
 #include <kernel/memory.h> /* kmalloc */
-#include <conio.h> /* printFormat */
+#include <conio.h> /* printFormat, printCharacter */
 #include <string.h> /* movedata, FP_SEG, FP_OFF */
 
 #ifdef FAT12_DEBUG
@@ -35,13 +35,18 @@
 
 static unsigned char far *buffer = NULL; /* multi purpose buffer */
 static unsigned char far *fatTable = NULL;
-//static unsigned char far *rootEntriesTable = NULL;
+static unsigned char far *rootEntriesTable = NULL;
 static struct BootSector bootSector;
 static unsigned char drive;
 
 static void readBootSectorInformation(void) {
-    (void)DiskOperationLBA(READ, 1, 0, drive, buffer);
+    unsigned char sectorsToRead = 1;
+    unsigned int startLogicalBlockAddressing = 0;
+
+    (void)DiskOperationLBA(READ, sectorsToRead, startLogicalBlockAddressing, drive, buffer);
+    /* Skip jump instruction while copying sector buffer into structure (+3) */
     movedata(FP_SEG(buffer), FP_OFF(buffer) + 3, _DS, (unsigned)&bootSector, sizeof(struct BootSector));
+
     #ifdef FAT12_DEBUG
         printFormat(LOGGER, "Read boot sector information\n");
         printFormat(LOGGER, "\tOemName: %s\n", bootSector.oemName);
@@ -74,6 +79,7 @@ static void readFATtable(void) {
 
     (void)DiskOperationLBA(READ, sectorsToRead, startLogicalBlockAddressing,
                            drive, fatTable);
+
     #ifdef FAT12_DEBUG
         printFormat(LOGGER, "Read FAT table\n");
         printFormat(LOGGER, "\tFat size: %d\n", fatSize);
@@ -83,7 +89,85 @@ static void readFATtable(void) {
 }
 
 static void readRootEntriesTable(void) {
-    //TODO
+    size_t entriesSize;
+    unsigned char sectorsToRead;
+    unsigned int startLogicalBlockAddressing;
+
+    entriesSize = bootSector.biosParameterBlock.rootEntries * sizeof(struct FileInformation);
+    sectorsToRead = entriesSize / bootSector.biosParameterBlock.bytesPerSector;
+    startLogicalBlockAddressing = bootSector.biosParameterBlock.numberOfFATs *
+                                  bootSector.biosParameterBlock.sectorsPerFAT +
+                                  bootSector.biosParameterBlock.reservedSectors;
+
+    rootEntriesTable = (unsigned char far *) kmalloc(entriesSize);
+    memset(fatTable, NULL, entriesSize);
+
+    (void)DiskOperationLBA(READ, sectorsToRead, startLogicalBlockAddressing,
+                           drive, rootEntriesTable);
+
+    #ifdef FAT12_DEBUG
+        printFormat(LOGGER, "Read root entries table\n");
+        printFormat(LOGGER, "\tEntries size: %d\n", entriesSize);
+        printFormat(LOGGER, "\tSectors to read: %d\n", sectorsToRead);
+        printFormat(LOGGER, "\tstarting lba: %d\n", startLogicalBlockAddressing);
+    #endif
+}
+
+static void printFileName(enum PRINT_STREAM stream, unsigned char *name, unsigned int size) {
+    register unsigned int index;
+    for(index = 0; (name[index] != ' ') && (index<size); index++) {
+        printCharacter(stream, name[index]);
+    }
+}
+
+static void showDirectory(unsigned char far *rootTable) {
+    struct FileInformation file;
+    unsigned int currentOffset = 0;
+    unsigned int filesCount = 0;
+    unsigned int directoriesCount = 0;
+
+    #ifdef FAT12_DEBUG
+        printFormat(LOGGER, "showDirectory\n");
+    #endif
+
+    while(currentOffset < SECTOR_SIZE && rootTable[currentOffset]) {
+        movedata(FP_SEG(rootTable), FP_OFF(rootTable) + currentOffset, _SS, (unsigned)&file, sizeof(struct FileInformation));
+        currentOffset += sizeof(struct FileInformation);
+
+        /* don't show */
+        if((file.name[0] == DELETED_FILE) || (file.attributes & VOLUME)) {
+            continue;
+        }
+
+        #ifdef FAT12_DEBUG
+            printFileName(LOGGER, file.name, FILE_NAME_SIZE);
+        #endif
+
+        printFileName(STDOUT, file.name, FILE_NAME_SIZE);
+        if(file.attributes & DIRECTORY) {
+            printFormat(STDOUT, " <dir>"); /* size is zero */
+            directoriesCount += 1;
+        } else {
+            printCharacter(STDOUT, '.');
+            printFileName(STDOUT, file.extension, FILE_EXTENSION_SIZE);
+            printFormat(STDOUT, " <file> %d", file.size);
+            filesCount += 1;
+            #ifdef FAT12_DEBUG
+                printCharacter(LOGGER, '.');
+                printFileName(LOGGER, file.extension, FILE_EXTENSION_SIZE);
+                printFormat(LOGGER, ", at root entry offset:%d\n", currentOffset);
+            #endif
+        }
+
+        printFormat(STDOUT, " %d:%d:%d", file.lastWriteTime.hour,
+                                         file.lastWriteTime.minutes,
+                                         file.lastWriteTime.doubleSeconds * 2);
+
+        printFormat(STDOUT, " %d-%d-%d\n", file.lastWriteDate.day,
+                                           file.lastWriteDate.month,
+                                           file.lastWriteDate.year + 1980);
+    }
+    printFormat(STDOUT, "files=%d, directories=%d\n", filesCount, directoriesCount);
 }
 
 void initializeFileSystem(unsigned char bootDrive) {
@@ -98,6 +182,9 @@ void initializeFileSystem(unsigned char bootDrive) {
     readBootSectorInformation();
     readFATtable();
     readRootEntriesTable();
+
+    // test pwd
+    showDirectory(rootEntriesTable);
 
     while(1); //TODO
 }

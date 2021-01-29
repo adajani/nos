@@ -23,9 +23,15 @@
 * @brief Fat 12 file system header file
 */
 
+/*
+The amount of data clusters is less than 4087 clusters.
+a FAT12 file system contains 1.5 bytes per cluster within the file allocation table.
+*/
+
 #ifndef __FAT12_H
     #define __FAT12_H
     /* @link: https://www.eit.lth.se/fileadmin/eit/courses/eitn50/Literature/fat12_description.pdf */
+    #include <conio.h> / * PRINT_STREAM */
 
     #define FAT12_DEBUG
 
@@ -57,25 +63,45 @@
         VOLUME = 8,
         DIRECTORY = 16,
         ARCHIVE = 32,
-   };
+    };
+
+    /* The DEL command will replace the first byte of the name
+       by 0xe5 to signify "deleted" */
+    #define DELETED_FILE 0xE5
+    #define FILE_NAME_SIZE 8
+    #define FILE_EXTENSION_SIZE 3
+
+    struct FileTime {
+        unsigned int doubleSeconds : 5; /* value << 1 */
+        unsigned int minutes: 6;
+        unsigned int hour : 5;
+    };
+
+    struct FileDate {
+        unsigned int day : 5;
+        unsigned int month: 4;
+        unsigned int year : 7; /* since 1980 */
+    };
 
     struct FileInformation {
-        unsigned char fileName[8];
-        unsigned char extension[3];
+        unsigned char name[FILE_NAME_SIZE];
+        unsigned char extension[FILE_EXTENSION_SIZE];
         unsigned char attributes;
         unsigned char reserved[2];
-        unsigned int creationTime;
-        unsigned int creationDate;
-        unsigned int lastAccessDate;
+        struct FileTime creationTime;
+        struct FileDate creationDate;
+        struct FileDate lastAccessDate;
         unsigned char ignore[2]; /* ignore in FAT12 */
-        unsigned int lastWriteTime;
-        unsigned int lastWriteDate;
+        struct FileTime lastWriteTime;
+        struct FileDate lastWriteDate;
         unsigned int firstLogicalCluster;
-        unsigned long fileSize; /* in bytes */
+        unsigned long size; /* in bytes */
     };
 
     void initializeFileSystem(unsigned char bootDrive);
     void readBootSectorInformation(void);
     void readFATtable(void);
     void readRootEntriesTable(void);
+    void printFileName(enum PRINT_STREAM stream, unsigned char *name, unsigned int size);
+    void showDirectory(unsigned char far *rootTable);
 #endif

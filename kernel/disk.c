@@ -89,7 +89,7 @@ int DiskOperationLBA(unsigned char operation, unsigned char numberOfSectors,
     sector = (logicalBlockAddressing % diskParameters.sectorsPerTrack) + 1;
 
     #ifdef DISK_DEBUG
-        printFormat("DiskOperationLBA lba=%d -> cylinder=%d, head=%d, sector=%d\n", 
+        printFormat(LOGGER, "DiskOperationLBA lba=%d -> cylinder=%d, head=%d, sector=%d\n",
                     logicalBlockAddressing, cylinder, head, sector);
     #endif
 
@@ -99,21 +99,21 @@ int DiskOperationLBA(unsigned char operation, unsigned char numberOfSectors,
 void initializeDisk(unsigned char drive) {
     #ifdef DISK_DEBUG
         static char *bootDrive[] = {"floppy a", "floppy b", "harddisk 0", "harddisk 1"};
-        printFormat("Booting from %s\n", bootDrive[drive]);
+        printFormat(LOGGER, "Booting from %s\n", bootDrive[drive]);
     #endif
     
     (void)resetDisk(drive);
     #ifdef DISK_DEBUG
         /* _AX contains the return value from the previous function */
-        printFormat("resetDisk status = %d\n", _AX);
+        printFormat(LOGGER, "resetDisk status = %d\n", _AX);
     #endif
 
     (void)getDiskParameters(&diskParameters, drive);
     #ifdef DISK_DEBUG
-        printFormat("getDiskParameters status = %d\n", _AX);
+        printFormat(LOGGER, "getDiskParameters status = %d\n", _AX);
         if(status == SUCCESS) {
-            printFormat("\t headsPerCylinder=%d\n", diskParameters.headsPerCylinder);
-            printFormat("\t sectorsPerTrack=%d\n", diskParameters.sectorsPerTrack);
+            printFormat(LOGGER, " headsPerCylinder=%d\n", diskParameters.headsPerCylinder);
+            printFormat(LOGGER, " sectorsPerTrack=%d\n", diskParameters.sectorsPerTrack);
         }
     #endif
 }

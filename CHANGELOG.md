@@ -1,3 +1,9 @@
+## [0.0.8] - 2021-1-29
+### Added
+- kernel(Fat12): readRootEntriesTable
+### Modified
+- build.bat: move the imgwrt into boot, kernel
+
 ## [0.0.7] - 2021-1-28
 ### Added
 - libc(conio): inPortByte

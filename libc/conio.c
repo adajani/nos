@@ -67,6 +67,7 @@ void clearScreen(void) {
     setCursorPosition(0, 0);
 }
 
+/* @note: Console tab is treated as space! */
 void printCharacter(enum PRINT_STREAM stream, unsigned char character) {
     switch(stream) {
         case STDOUT:
