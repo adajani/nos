@@ -182,8 +182,17 @@ static struct FileInformation far *getFileInformation(unsigned char far *rootTab
     return NULL; /* file not found */
 }
 
-static void showFile(struct FileInformation far *file) {
+static unsigned int getFileStartLogicalBlockAddressingInData(struct FileInformation far *file) {
+    /* calculate the file/directory lba in data part */
+    unsigned int startLogicalBlockAddressing;
     unsigned int startByte;
+    startByte = dataStartAddress + (file->firstLogicalCluster - 2) *
+                bootSector.biosParameterBlock.bytesPerSector;
+    startLogicalBlockAddressing = startByte / SECTOR_SIZE;
+    return startLogicalBlockAddressing;
+}
+
+static void showFile(struct FileInformation far *file) {
     unsigned int startLogicalBlockAddressing;
     register unsigned long index;
     register unsigned long sectorsToRead;
@@ -206,9 +215,7 @@ static void showFile(struct FileInformation far *file) {
         return;
     }
 
-    startByte = dataStartAddress + (file->firstLogicalCluster - 2) *
-                bootSector.biosParameterBlock.bytesPerSector;
-    startLogicalBlockAddressing = startByte / SECTOR_SIZE;
+    startLogicalBlockAddressing = getFileStartLogicalBlockAddressingInData(file);
 
     sectorsToRead = file->size / SECTOR_SIZE;
     remainBytes = file->size % SECTOR_SIZE;
@@ -274,6 +281,7 @@ static void showDirectory(unsigned char far *rootTable) {
         }
 
         #ifdef FAT12_DEBUG
+            printFormat(LOGGER, "  ");
             printFileName(LOGGER, file->name, FILE_NAME_SIZE);
         #endif
 
@@ -311,8 +319,11 @@ static void showDirectory(unsigned char far *rootTable) {
 
 void initializeFileSystem(unsigned char bootDrive) {
     #ifdef FAT12_DEBUG
+        struct FileInformation far *dir;
         struct FileInformation far *file;
-        char fileName[]={"FILE7   TXT"};
+        unsigned int dirLBA;
+        char dirName[]={"DIR1       "};
+        char fileName[]={"FILE11  TXT"};
         printFormat(LOGGER, "Initialize file system\n");
     #endif
 
@@ -325,14 +336,26 @@ void initializeFileSystem(unsigned char bootDrive) {
     readRootEntriesTable();
     initializeFATDataAddress();
 
-    /* Testing */
+    /* Testing sub folder */
     showDirectory(rootEntriesTable);
 
-    file = getFileInformation(rootEntriesTable, (unsigned char far*)MK_FP(FP_SEG(fileName),FP_OFF(fileName)));
+    //DIR1
+    dir = getFileInformation(rootEntriesTable, (unsigned char far*)MK_FP(FP_SEG(dirName), FP_OFF(dirName)));
+    if(!dir) {
+        printFormat(STDOUT, "Error: dir not found\n");
+        while(1);
+    }
+
+    dirLBA = getFileStartLogicalBlockAddressingInData(dir);
+    (void)DiskOperationLBA(READ, 1 /* one sector */, dirLBA, drive, buffer);
+
+    //FILE11.TXT
+    file = getFileInformation(buffer, (unsigned char far*)MK_FP(FP_SEG(fileName),FP_OFF(fileName)));
     if(!file) {
         printFormat(STDOUT, "Error: file not found\n");
-        while(1); //TODO
+        while(1);
     }
+
     printFormat(STDOUT, "show file contents:\n");
     showFile(file);
 
