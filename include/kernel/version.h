@@ -26,6 +26,6 @@
 #ifndef __VERSION_H
     #define __VERSION_H
     #define MAJOR_VERSION 0
-    #define MINOR_VERSION 5
+    #define MINOR_VERSION 8
     #define COPY_RIGHT "(c)2020 By Ahmad Dajani, eng.adajani@gmail.com"
 #endif
