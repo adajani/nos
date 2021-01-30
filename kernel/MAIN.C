@@ -29,7 +29,6 @@
 #include <kernel/fat12.h> /* initializeFileSystem */
 #include <kernel/disk.h> /* initializeDisk */
 #include <kernel/splash.h> /* showSplashScreen */
-#include <kernel/detect.h> /* detectHardware */
 #include <conio.h> /* printFormat */
 #include <string.h> /* memset, size_t */
 
@@ -51,7 +50,6 @@ void main() {
 #endif
 
     showSplashScreen();
-    detectHardware();
     initializeMemory(_heapStart);
     initializeFileSystem(bootDrive);
     initializeInterrupt();

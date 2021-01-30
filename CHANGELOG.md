@@ -4,10 +4,10 @@
 - kernel(Fat12): isFileNamesEqual
 - kernel(Fat12): getFileInformation
 - kernel(Fat12): showFile
+- kernel(Fat12): openFilewithPath
 - kernel(main): welcomeMessage
 - libc(string): convertCharacterToLowerCase
 - kernel(splash): showSplashScreen
-- kernel(detect): Basic hardware detection
 ### Modified
 - kernel(Fat12): printFileName
 - kernel(Fat12): Addining test for reading file in sub-sub folder

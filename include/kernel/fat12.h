@@ -109,4 +109,5 @@ a FAT12 file system contains 1.5 bytes per cluster within the file allocation ta
     struct FileInformation far *getFileInformation(unsigned char far *rootTable, unsigned char far *fileName);
     void showFile(struct FileInformation far *file);
     unsigned int getFileStartLogicalBlockAddressingInData(struct FileInformation far *file);
+    struct FileInformation far *openFilewithPath(unsigned char *path);
 #endif

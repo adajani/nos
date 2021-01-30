@@ -38,7 +38,7 @@ static unsigned char far *fatTable = NULL;
 static unsigned char far *rootEntriesTable = NULL;
 static struct BootSector bootSector;
 static unsigned char drive;
-static unsigned dataStartAddress = 0; /* linear address */
+static unsigned dataStartAddress = 0; /* linear address to FAT data area */
 
 static void readBootSectorInformation(void) {
     unsigned char sectorsToRead = 1;
@@ -318,15 +318,56 @@ static void showDirectory(unsigned char far *rootTable) {
     printFormat(STDOUT, "files=%d, directories=%d\n", filesCount, directoriesCount);
 }
 
+static struct FileInformation far *openFilewithPath(unsigned char *path) {
+    /* TODO: 1. compact file name (remove space padding) 
+             2. start with root, no relative directory yet!
+             3. validate the path based on FAT12 naming rules
+    */
+    unsigned char *pathPointer = path;
+    unsigned char dirName[11];
+    unsigned int dirIndex;
+    unsigned int index;
+    unsigned char far *currentWorkingDirectory = NULL;
+    struct FileInformation far *dir;
+    unsigned int dirLBA;
+
+    /* Parse the path based on separator / */
+    for(index=0; pathPointer[index] != NULL; index++) {
+        dirIndex = 0;
+        while(pathPointer[index] != NULL && pathPointer[index] != '/') {
+           dirName[dirIndex++] = pathPointer[index++];
+        }
+
+        if(dirName[0] == ' ') { /* root [          /] */
+            currentWorkingDirectory = rootEntriesTable;
+            continue;
+        }
+
+        printFileName(STDOUT, dirName, 11);
+        printCharacter(STDOUT, '\n');
+
+        dir = getFileInformation(currentWorkingDirectory, (unsigned char far*)MK_FP(FP_SEG(dirName), FP_OFF(dirName)));
+        if(!dir) {
+            printFormat(STDOUT, "Error: dir not found\n");
+            return NULL;
+        }
+
+        if(!(dir->attributes & DIRECTORY)) { /* This is a file, so stop iterating */
+            break;
+        }
+
+        dirLBA = getFileStartLogicalBlockAddressingInData(dir);
+        (void)DiskOperationLBA(READ, 1 /* one sector */, dirLBA, drive, buffer);
+
+        currentWorkingDirectory = buffer;
+    }
+
+    return dir;
+}
+
 void initializeFileSystem(unsigned char bootDrive) {
     #ifdef FAT12_DEBUG
-        struct FileInformation far *dir;
-        struct FileInformation far *file;
-        unsigned int dirLBA;
-        /* dir1/dir2/file111.txt */
-        char dirName1[]={"DIR1       "};
-        char dirName2[]={"DIR11      "};
-        char fileName[]={"FILE111 TXT"};
+        struct FileInformation far *file = NULL;
         printFormat(LOGGER, "Initialize file system\n");
     #endif
 
@@ -342,33 +383,10 @@ void initializeFileSystem(unsigned char bootDrive) {
     /* Testing sub folder */
     showDirectory(rootEntriesTable);
 
-    //DIR1
-    dir = getFileInformation(rootEntriesTable, (unsigned char far*)MK_FP(FP_SEG(dirName1), FP_OFF(dirName1)));
-    if(!dir) {
-        printFormat(STDOUT, "Error: dir not found\n");
-        while(1);
+    file = openFilewithPath((unsigned char*)"           /dir1       /dir11      /file111 txt");
+    if(file) {
+        showFile(file);
     }
-    dirLBA = getFileStartLogicalBlockAddressingInData(dir);
-    (void)DiskOperationLBA(READ, 1 /* one sector */, dirLBA, drive, buffer);
-
-    //DIR2
-    dir = getFileInformation(buffer, (unsigned char far*)MK_FP(FP_SEG(dirName2), FP_OFF(dirName2)));
-    if(!dir) {
-        printFormat(STDOUT, "Error: dir not found\n");
-        while(1);
-    }
-    dirLBA = getFileStartLogicalBlockAddressingInData(dir);
-    (void)DiskOperationLBA(READ, 1 /* one sector */, dirLBA, drive, buffer);
-
-    //FILE11.TXT
-    file = getFileInformation(buffer, (unsigned char far*)MK_FP(FP_SEG(fileName),FP_OFF(fileName)));
-    if(!file) {
-        printFormat(STDOUT, "Error: file not found\n");
-        while(1);
-    }
-
-    printFormat(STDOUT, "show file contents:\n");
-    showFile(file);
 
     while(1); //TODO
 }
