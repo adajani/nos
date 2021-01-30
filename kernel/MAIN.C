@@ -28,17 +28,13 @@
 #include <kernel/service.h> /* NOS_INTR, initializeInterrupt */
 #include <kernel/fat12.h> /* initializeFileSystem */
 #include <kernel/disk.h> /* initializeDisk */
-#include <kernel/version.h> /* MAJOR_VERSION, MINOR_VERSION, COPY_RIGHT */
+#include <kernel/splash.h> /* showSplashScreen */
+#include <kernel/detect.h> /* detectHardware */
 #include <conio.h> /* printFormat */
 #include <string.h> /* memset, size_t */
 
-extern unsigned int _heapStart; /* file: c0t.asm */
-extern unsigned char bootDrive; /* file: c0t.asm */
-
-void welcomeMessage(void) {
-    printFormat(STDOUT, "Starting NOS v%d.%d, build " __DATE__ "\n%s\n",
-                        MAJOR_VERSION, MINOR_VERSION, COPY_RIGHT);
-}
+extern unsigned int _heapStart; /* @see c0t.asm */
+extern unsigned char bootDrive; /* @see c0t.asm */
 
 void main() {
 #if 0
@@ -53,63 +49,14 @@ void main() {
     /*                   size  actual  buffer  null */
     unsigned char buffer[1+    1+      SIZE+      1 ]={SIZE};
 #endif
-    unsigned char far *buffer = NULL;
-    int status;
-    unsigned int lba;
-    unsigned char numberOfSectors = 1;
 
-    welcomeMessage();
+    showSplashScreen();
+    detectHardware();
     initializeMemory(_heapStart);
     initializeFileSystem(bootDrive);
     initializeInterrupt();
 
-    buffer = (unsigned char far *) kmalloc(numberOfSectors * SECTOR_SIZE);
-    printFormat(LOGGER, "Buffer @ %x:%x\n", FP_SEG(buffer), FP_OFF(buffer));
-
-    /* 1. read */
-    lba = 0;
-    printFormat(LOGGER, "Reading %d sector(s) at lba %d (boot sector)\n", numberOfSectors, lba);
-    status = DiskOperationLBA(READ, numberOfSectors, lba, bootDrive, buffer);
-    if(status == FAILURE) {
-        printFormat(LOGGER, "Read Error\n");
-    } else {
-        printFormat(LOGGER, "Read success\n");
-        printFormat(LOGGER, "Check read buffer: ");
-        if(buffer[0]==0xeb && buffer[1]==0x3c &&
-           buffer[510]==0x55 && buffer[511]==0xaa
-        ) {
-            printFormat(LOGGER, "pass\n");
-        } else {
-            printFormat(LOGGER, "fail\n");
-        }
-    }
-
-    /* 2. write & read */
-    lba = 100;
-    memset(buffer,'+', SECTOR_SIZE);
-    buffer[511] = '-';
-
-    printFormat(LOGGER, "Writing %s sector(s) at lba %d\n", numberOfSectors, lba);
-    status = DiskOperationLBA(WRITE, numberOfSectors, lba, bootDrive, buffer);
-    if(status == FAILURE) {
-        printFormat(LOGGER, "Write Error\n");
-    } else {
-        printFormat(LOGGER, "Write success\n");
-        memset(buffer, NULL, 512);
-        printFormat(LOGGER, "Read back lba %d\n", lba);
-        status = DiskOperationLBA(READ, numberOfSectors, lba, bootDrive, buffer);
-        if(status == FAILURE) {
-            printFormat(LOGGER, "Read back Error\n");
-        } else {
-            printFormat(LOGGER, "Read back success\n");
-            printFormat(LOGGER, "Check read buffer: ");
-            if(buffer[0] == '+' && buffer[200] == '+' && buffer[511] == '-') {
-                printFormat(LOGGER, "pass\n");
-            } else {
-                printFormat(LOGGER, "fail\n");
-            }
-        }
-    }
+    //TODO: load MZ files and execute shell
 
 #if 0
     /* create MCB */

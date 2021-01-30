@@ -206,7 +206,7 @@ static void showFile(struct FileInformation far *file) {
     register unsigned long remainBytes;
 
     #ifdef FAT12_DEBUG
-        printFormat(LOGGER, "showFile: ");
+        printFormat(LOGGER, "showFile\n");
     #endif
 
     if(!file) {
@@ -226,11 +226,6 @@ static void showFile(struct FileInformation far *file) {
     sectorsToRead = file->size / SECTOR_SIZE;
     remainBytes = file->size % SECTOR_SIZE;
 
-    #ifdef FAT12_DEBUG
-        printFileName(LOGGER, file->name, 11);
-        printFormat(LOGGER, ", @ lba=%d\n", startLogicalBlockAddressing);
-    #endif
-
     /* Edge case when file size is less that the sector */
     if( (file->size < SECTOR_SIZE) && (sectorsToRead == 0) ) {
         sectorsToRead = 1;
@@ -242,7 +237,7 @@ static void showFile(struct FileInformation far *file) {
     while(sectorsToRead) {
         (void)DiskOperationLBA(READ, 1 /* one sector */, startLogicalBlockAddressing, drive, buffer);
         #ifdef FAT12_DEBUG
-            printFormat(LOGGER, "  reading %d bytes\n", bytesCount);
+            printFormat(LOGGER, "\treading %d bytes\n", bytesCount);
         #endif
 
         for(index=0; index<bytesCount; index++) {
@@ -256,7 +251,7 @@ static void showFile(struct FileInformation far *file) {
     if(remainBytes) {
         (void)DiskOperationLBA(READ, 1 /* one sector */, startLogicalBlockAddressing, drive, buffer);
         #ifdef FAT12_DEBUG
-            printFormat(LOGGER, "  reading remain %d bytes\n", remainBytes);
+            printFormat(LOGGER, "\treading remain %d bytes\n", remainBytes);
         #endif
 
         for(index=0; index<remainBytes; index++) {
@@ -287,7 +282,7 @@ static void showDirectory(unsigned char far *rootTable) {
         }
 
         #ifdef FAT12_DEBUG
-            printFormat(LOGGER, "  ");
+            printCharacter(LOGGER, '\t');
             printFileName(LOGGER, file->name, FILE_NAME_SIZE);
         #endif
 

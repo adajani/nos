@@ -6,9 +6,12 @@
 - kernel(Fat12): showFile
 - kernel(main): welcomeMessage
 - libc(string): convertCharacterToLowerCase
+- kernel(splash): showSplashScreen
+- kernel(detect): Basic hardware detection
 ### Modified
 - kernel(Fat12): printFileName
 - kernel(Fat12): Addining test for reading file in sub-sub folder
+- kernel(version): Choose Hypsilophodon as code name
 
 ## [0.0.8] - 2021-1-29
 ### Added

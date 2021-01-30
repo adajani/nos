@@ -17,16 +17,14 @@
 * License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  *
 ************************************************************************/
 
-/*@file version.h
+/*@file splash.h
 * @author Ahmad Dajani <eng.adajani@gmail.com>
-* @date 5 Jan 2020
-* @brief Kernel version header file
+* @date 30 Jan 2021
+* @brief Kernel splash screen header file
 */
 
-#ifndef __VERSION_H
-    #define __VERSION_H
-    #define MAJOR_VERSION 0
-    #define MINOR_VERSION 8
-    #define CODE_NAME "Hypsilophodon"
-    #define COPY_RIGHT "(c)2020 By Ahmad Dajani, eng.adajani@gmail.com"
+#ifndef __SPLASH_SCREEN_H
+    #define __SPLASH_SCREEN_H
+    void showSplashScreen(void);
+    void NOSLogo(void);
 #endif

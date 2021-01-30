@@ -39,7 +39,7 @@ LIBFLAGS=/C
 LIBNAME=kernel
 IMAGE_TOOL=imgwrt.exe
 
-objects=c0t.obj memory.obj service.obj disk.obj fat12.obj main.obj
+objects=c0t.obj memory.obj service.obj disk.obj fat12.obj splash.obj detect.obj main.obj
 helper=helper.lib
 libc=libc.lib
 kernelLib=kernel.lib
@@ -52,6 +52,8 @@ kernel.bin: clean $(objects)
     $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\service.obj
     $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\disk.obj
     $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\fat12.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\splash.obj
+    $(LIB) $(LIBFLAGS) $(build)\$(LIBNAME) +$(build)\detect.obj
 
     $(LD) $(LDFLAGS) $(build)\c0t.obj \
                      $(build)\$(helper) \
@@ -67,6 +69,12 @@ c0t.obj: c0t.asm
 
 disk.obj: disk.c
     $(CC) $(CFLAGS) -o$(build)\$@ disk.c
+
+detect.obj: detect.c
+    $(CC) $(CFLAGS) -o$(build)\$@ detect.c
+
+splash.obj: splash.c
+    $(CC) $(CFLAGS) -o$(build)\$@ splash.c
 
 fat12.obj: fat12.c
     $(CC) $(CFLAGS) -o$(build)\$@ fat12.c
@@ -88,4 +96,6 @@ clean:
     erase $(build)\service.obj
     erase $(build)\disk.obj
     erase $(build)\fat12.obj
+    erase $(build)\splash.obj
+    erase $(build)\detect.obj
     erase $(build)\$(kernelLib)
