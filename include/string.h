@@ -47,4 +47,5 @@
     void memset(void far *address, char value, size_t size);
     void movedata(unsigned SourceSegment, unsigned SourceOffset,
                   unsigned DestinationSegment, unsigned DestinationOffset, size_t size);
+    unsigned char convertCharacterToLowerCase(unsigned char character);
 #endif

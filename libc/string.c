@@ -59,3 +59,10 @@ void movedata(unsigned SourceSegment, unsigned SourceOffset,
         pop ds
     }
 }
+
+unsigned char convertCharacterToLowerCase(unsigned char character) {
+    if( (character >= 'A') && (character <= 'Z')) {
+        return character + 32;
+    }
+    return character;
+}

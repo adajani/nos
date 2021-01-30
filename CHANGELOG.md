@@ -1,3 +1,13 @@
+## [0.0.9] - 2021-1-30
+### Added
+- kernel(Fat12): initializeFATDataAddress
+- kernel(Fat12): isFileNamesEqual
+- kernel(Fat12): getFileInformation
+- kernel(Fat12): showFile
+- libc(string): convertCharacterToLowerCase
+### Modified
+- kernel(Fat12): printFileName
+
 ## [0.0.8] - 2021-1-29
 ### Added
 - kernel(Fat12): readRootEntriesTable
