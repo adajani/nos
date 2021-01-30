@@ -150,6 +150,7 @@ static unsigned int isFileNamesEqual(unsigned char far *fileName1, unsigned char
 }
 
 static struct FileInformation far *getFileInformation(unsigned char far *rootTable, unsigned char far *fileName) {
+    /* Directories (such as the root directory) exist like files on the disk */
     struct FileInformation far *currentFile;
     unsigned int currentOffset = 0;
     #ifdef FAT12_DEBUG
@@ -183,12 +184,17 @@ static struct FileInformation far *getFileInformation(unsigned char far *rootTab
 }
 
 static unsigned int getFileStartLogicalBlockAddressingInData(struct FileInformation far *file) {
-    /* calculate the file/directory lba in data part */
+    /* calculate the file/directory lba in data area on disk */
     unsigned int startLogicalBlockAddressing;
     unsigned int startByte;
     startByte = dataStartAddress + (file->firstLogicalCluster - 2) *
                 bootSector.biosParameterBlock.bytesPerSector;
     startLogicalBlockAddressing = startByte / SECTOR_SIZE;
+    #ifdef FAT12_DEBUG
+        printFormat(LOGGER, "getFileStartLogicalBlockAddressingInData: ");
+        printFileName(LOGGER, file->name, 11);
+        printFormat(LOGGER, ", @ data area lba=%d\n", startLogicalBlockAddressing);
+    #endif
     return startLogicalBlockAddressing;
 }
 
@@ -322,8 +328,10 @@ void initializeFileSystem(unsigned char bootDrive) {
         struct FileInformation far *dir;
         struct FileInformation far *file;
         unsigned int dirLBA;
-        char dirName[]={"DIR1       "};
-        char fileName[]={"FILE11  TXT"};
+        /* dir1/dir2/file111.txt */
+        char dirName1[]={"DIR1       "};
+        char dirName2[]={"DIR11      "};
+        char fileName[]={"FILE111 TXT"};
         printFormat(LOGGER, "Initialize file system\n");
     #endif
 
@@ -340,12 +348,20 @@ void initializeFileSystem(unsigned char bootDrive) {
     showDirectory(rootEntriesTable);
 
     //DIR1
-    dir = getFileInformation(rootEntriesTable, (unsigned char far*)MK_FP(FP_SEG(dirName), FP_OFF(dirName)));
+    dir = getFileInformation(rootEntriesTable, (unsigned char far*)MK_FP(FP_SEG(dirName1), FP_OFF(dirName1)));
     if(!dir) {
         printFormat(STDOUT, "Error: dir not found\n");
         while(1);
     }
+    dirLBA = getFileStartLogicalBlockAddressingInData(dir);
+    (void)DiskOperationLBA(READ, 1 /* one sector */, dirLBA, drive, buffer);
 
+    //DIR2
+    dir = getFileInformation(buffer, (unsigned char far*)MK_FP(FP_SEG(dirName2), FP_OFF(dirName2)));
+    if(!dir) {
+        printFormat(STDOUT, "Error: dir not found\n");
+        while(1);
+    }
     dirLBA = getFileStartLogicalBlockAddressingInData(dir);
     (void)DiskOperationLBA(READ, 1 /* one sector */, dirLBA, drive, buffer);
 

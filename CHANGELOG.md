@@ -4,9 +4,11 @@
 - kernel(Fat12): isFileNamesEqual
 - kernel(Fat12): getFileInformation
 - kernel(Fat12): showFile
+- kernel(main): welcomeMessage
 - libc(string): convertCharacterToLowerCase
 ### Modified
 - kernel(Fat12): printFileName
+- kernel(Fat12): Addining test for reading file in sub-sub folder
 
 ## [0.0.8] - 2021-1-29
 ### Added

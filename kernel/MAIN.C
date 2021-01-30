@@ -35,6 +35,11 @@
 extern unsigned int _heapStart; /* file: c0t.asm */
 extern unsigned char bootDrive; /* file: c0t.asm */
 
+void welcomeMessage(void) {
+    printFormat(STDOUT, "Starting NOS v%d.%d, build " __DATE__ "\n%s\n",
+                        MAJOR_VERSION, MINOR_VERSION, COPY_RIGHT);
+}
+
 void main() {
 #if 0
     #define SIZE 100
@@ -53,7 +58,7 @@ void main() {
     unsigned int lba;
     unsigned char numberOfSectors = 1;
 
-    printFormat(STDOUT, "Starting NOS v%d.%d, %s\n", MAJOR_VERSION, MINOR_VERSION, COPY_RIGHT);
+    welcomeMessage();
     initializeMemory(_heapStart);
     initializeFileSystem(bootDrive);
     initializeInterrupt();
