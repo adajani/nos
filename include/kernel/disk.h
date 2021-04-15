@@ -26,8 +26,9 @@
 #ifndef __DISK_H
     #define __DISK_H
     #define DISK_ATTEMPT 3
+
     /* #define DISK_DEBUG */
-    
+
     #ifdef DISK_DEBUG
         #include <conio.h> /* printFormat */
     #endif

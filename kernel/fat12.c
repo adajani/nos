@@ -33,10 +33,10 @@
     #include <kernel/debug.h>
 #endif
 
-static unsigned char far *buffer = NULL; /* multi purpose buffer */
 static unsigned char far *fatTable = NULL;
 static unsigned char far *rootEntriesTable = NULL;
-static struct BootSector bootSector;
+static struct BootSector far *bootSector = NULL;
+static unsigned char far *buffer = NULL; /* multi purpose buffer with sector size */
 static unsigned char drive;
 static unsigned dataStartAddress = 0; /* linear address to FAT data area */
 
@@ -44,24 +44,24 @@ static void readBootSectorInformation(void) {
     unsigned char sectorsToRead = 1;
     unsigned int startLogicalBlockAddressing = 0;
 
-    (void)DiskOperationLBA(READ, sectorsToRead, startLogicalBlockAddressing, drive, buffer);
-    /* Skip jump instruction while copying sector buffer into structure (+3) */
-    movedata(FP_SEG(buffer), FP_OFF(buffer) + 3, _DS, (unsigned)&bootSector, sizeof(struct BootSector));
+    bootSector = (struct BootSector far *)kmalloc(SECTOR_SIZE);
+    memset(bootSector, NULL, SECTOR_SIZE);
+    (void)DiskOperationLBA(READ, sectorsToRead, startLogicalBlockAddressing, drive, bootSector);
 
     #ifdef FAT12_DEBUG
         printFormat(LOGGER, "Read boot sector information\n");
-        printFormat(LOGGER, "\tOemName: %s\n", bootSector.oemName);
-        printFormat(LOGGER, "\tBytesPerSector: %d\n", bootSector.biosParameterBlock.bytesPerSector);
-        printFormat(LOGGER, "\tSectorsPerCluster: %d\n", bootSector.biosParameterBlock.sectorsPerCluster);
-        printFormat(LOGGER, "\tReservedSectors: %d\n", bootSector.biosParameterBlock.reservedSectors);
-        printFormat(LOGGER, "\tNumberOfFATs: %d\n", bootSector.biosParameterBlock.numberOfFATs);
-        printFormat(LOGGER, "\tRootEntries: %d\n", bootSector.biosParameterBlock.rootEntries);
-        printFormat(LOGGER, "\tTotalSectors: %d\n", bootSector.biosParameterBlock.totalSectors);
-        printFormat(LOGGER, "\tMedia: 0x%x\n", bootSector.biosParameterBlock.media);
-        printFormat(LOGGER, "\tSectorsPerFAT: %d\n", bootSector.biosParameterBlock.sectorsPerFAT);
-        printFormat(LOGGER, "\tSectorsPerTrack: %d\n", bootSector.biosParameterBlock.sectorsPerTrack);
-        printFormat(LOGGER, "\tHeadsPerCylinder: %d\n", bootSector.biosParameterBlock.headsPerCylinder);
-        printFormat(LOGGER, "\tHiddenSectors: %d\n", bootSector.biosParameterBlock.hiddenSectors);
+        printFormat(LOGGER, "\tOemName: %s\n", bootSector->oemName);
+        printFormat(LOGGER, "\tBytesPerSector: %d\n", bootSector->biosParameterBlock.bytesPerSector);
+        printFormat(LOGGER, "\tSectorsPerCluster: %d\n", bootSector->biosParameterBlock.sectorsPerCluster);
+        printFormat(LOGGER, "\tReservedSectors: %d\n", bootSector->biosParameterBlock.reservedSectors);
+        printFormat(LOGGER, "\tNumberOfFATs: %d\n", bootSector->biosParameterBlock.numberOfFATs);
+        printFormat(LOGGER, "\tRootEntries: %d\n", bootSector->biosParameterBlock.rootEntries);
+        printFormat(LOGGER, "\tTotalSectors: %d\n", bootSector->biosParameterBlock.totalSectors);
+        printFormat(LOGGER, "\tMedia: 0x%x\n", bootSector->biosParameterBlock.media);
+        printFormat(LOGGER, "\tSectorsPerFAT: %d\n", bootSector->biosParameterBlock.sectorsPerFAT);
+        printFormat(LOGGER, "\tSectorsPerTrack: %d\n", bootSector->biosParameterBlock.sectorsPerTrack);
+        printFormat(LOGGER, "\tHeadsPerCylinder: %d\n", bootSector->biosParameterBlock.headsPerCylinder);
+        printFormat(LOGGER, "\tHiddenSectors: %d\n", bootSector->biosParameterBlock.hiddenSectors);
     #endif
 }
 
@@ -70,12 +70,12 @@ static void readFATtable(void) {
     unsigned char sectorsToRead;
     unsigned int startLogicalBlockAddressing;
 
-    fatSize = bootSector.biosParameterBlock.bytesPerSector
-              * bootSector.biosParameterBlock.sectorsPerFAT;
-    sectorsToRead = (unsigned char)bootSector.biosParameterBlock.sectorsPerFAT;
-    startLogicalBlockAddressing = bootSector.biosParameterBlock.reservedSectors;
+    fatSize = bootSector->biosParameterBlock.bytesPerSector
+              * bootSector->biosParameterBlock.sectorsPerFAT;
+    sectorsToRead = (unsigned char)bootSector->biosParameterBlock.sectorsPerFAT;
+    startLogicalBlockAddressing = bootSector->biosParameterBlock.reservedSectors;
 
-    fatTable = (unsigned char far *) kmalloc(fatSize);
+    fatTable = (unsigned char far *)kmalloc(fatSize);
     memset(fatTable, NULL, fatSize);
 
     (void)DiskOperationLBA(READ, sectorsToRead, startLogicalBlockAddressing,
@@ -86,6 +86,7 @@ static void readFATtable(void) {
         printFormat(LOGGER, "\tFat size: %d\n", fatSize);
         printFormat(LOGGER, "\tSectors to read: %d\n", sectorsToRead);
         printFormat(LOGGER, "\tstarting lba: %d\n", startLogicalBlockAddressing);
+        printFormat(LOGGER, "\tcopy at address %x:%x\n", FP_SEG(fatTable), FP_OFF(fatTable));
     #endif
 }
 
@@ -94,42 +95,33 @@ static void readRootEntriesTable(void) {
     unsigned char sectorsToRead;
     unsigned int startLogicalBlockAddressing;
 
-    entriesSize = bootSector.biosParameterBlock.rootEntries * sizeof(struct FileInformation);
-    sectorsToRead = entriesSize / bootSector.biosParameterBlock.bytesPerSector;
-    startLogicalBlockAddressing = bootSector.biosParameterBlock.numberOfFATs *
-                                  bootSector.biosParameterBlock.sectorsPerFAT +
-                                  bootSector.biosParameterBlock.reservedSectors;
+    entriesSize = bootSector->biosParameterBlock.rootEntries * sizeof(struct FileInformation);
+    sectorsToRead = entriesSize / bootSector->biosParameterBlock.bytesPerSector;
+    startLogicalBlockAddressing = bootSector->biosParameterBlock.numberOfFATs *
+                                  bootSector->biosParameterBlock.sectorsPerFAT +
+                                  bootSector->biosParameterBlock.reservedSectors;
 
-    rootEntriesTable = (unsigned char far *) kmalloc(entriesSize);
-    memset(fatTable, NULL, entriesSize);
+    rootEntriesTable = (unsigned char far *)kmalloc(entriesSize);
+    memset(rootEntriesTable, NULL, entriesSize);
 
     (void)DiskOperationLBA(READ, sectorsToRead, startLogicalBlockAddressing,
                            drive, rootEntriesTable);
-
     #ifdef FAT12_DEBUG
         printFormat(LOGGER, "Read root entries table\n");
         printFormat(LOGGER, "\tEntries size in bytes: %d\n", entriesSize);
         printFormat(LOGGER, "\tSectors to read: %d\n", sectorsToRead);
         printFormat(LOGGER, "\tstarting lba: %d\n", startLogicalBlockAddressing);
+        printFormat(LOGGER, "\tcopy at address %x:%x\n", FP_SEG(entriesSize), FP_OFF(entriesSize));
     #endif
 }
 
 static void initializeFATDataAddress(void) {
-    dataStartAddress = bootSector.biosParameterBlock.bytesPerSector *
-                      (bootSector.biosParameterBlock.reservedSectors +
-                       bootSector.biosParameterBlock.sectorsPerFAT *
-                       bootSector.biosParameterBlock.numberOfFATs +
-                       (bootSector.biosParameterBlock.rootEntries *
-                       sizeof(struct FileInformation) +
-                       bootSector.biosParameterBlock.bytesPerSector - 1)
-                       / bootSector.biosParameterBlock.bytesPerSector);
-}
-
-static void printFileName(enum PRINT_STREAM stream, unsigned char far *name, unsigned int size) {
-    register unsigned int index;
-    for(index = 0; (name[index] != ' ') && (index<size); index++) {
-        printCharacter(stream, name[index]);
-    }
+    dataStartAddress = bootSector->biosParameterBlock.reservedSectors +
+                      (bootSector->biosParameterBlock.sectorsPerFAT *
+                       bootSector->biosParameterBlock.numberOfFATs) +
+                       ((bootSector->biosParameterBlock.rootEntries *
+                       sizeof(struct FileInformation))
+                       / bootSector->biosParameterBlock.bytesPerSector);
 }
 
 static unsigned int isFileNamesEqual(unsigned char far *fileName1, unsigned char far *fileName2) {
@@ -157,7 +149,7 @@ static struct FileInformation far *getFileInformation(unsigned char far *rootTab
         printFormat(LOGGER, "getFileInformation: [%s],", fileName);
     #endif
 
-    while(currentOffset < bootSector.biosParameterBlock.rootEntries &&
+    while(currentOffset < bootSector->biosParameterBlock.rootEntries &&
           rootTable[currentOffset] != NULL) {
 
         currentFile = (struct FileInformation far *)MK_FP(FP_SEG(rootTable), FP_OFF(rootTable) + currentOffset);
@@ -183,196 +175,97 @@ static struct FileInformation far *getFileInformation(unsigned char far *rootTab
     return NULL; /* file not found */
 }
 
-static unsigned int getFileStartLogicalBlockAddressingInData(struct FileInformation far *file) {
+static unsigned int getFileStartLogicalBlockAddressingInData(unsigned int cluster) {
     /* calculate the file/directory lba in data area on disk */
     unsigned int startLogicalBlockAddressing;
-    unsigned int startByte;
-    startByte = dataStartAddress + (file->firstLogicalCluster - 2) *
-                bootSector.biosParameterBlock.bytesPerSector;
-    startLogicalBlockAddressing = startByte / SECTOR_SIZE;
+    startLogicalBlockAddressing = dataStartAddress + ((cluster - 2) *
+                bootSector->biosParameterBlock.sectorsPerCluster);
     #ifdef FAT12_DEBUG
         printFormat(LOGGER, "getFileStartLogicalBlockAddressingInData: ");
-        printFileName(LOGGER, file->name, 11);
         printFormat(LOGGER, ", @ data area lba=%d\n", startLogicalBlockAddressing);
     #endif
     return startLogicalBlockAddressing;
 }
 
-static void showFile(struct FileInformation far *file) {
-    unsigned int startLogicalBlockAddressing;
-    register unsigned long index;
-    register unsigned long sectorsToRead;
-    register unsigned long bytesCount;
-    register unsigned long remainBytes;
+void showFile(struct FileInformation far *file) {
+    int index;
+    unsigned int cluster = file->firstLogicalCluster;
+    unsigned int t = cluster;
+    unsigned int fat_offset;
+    unsigned int start;
 
-    #ifdef FAT12_DEBUG
-        printFormat(LOGGER, "showFile\n");
-    #endif
+    while(1) {
+        start = getFileStartLogicalBlockAddressingInData(cluster);
 
-    if(!file) {
-        printFormat(LOGGER, " exit early (NULL)\n");
-        return;
-    }
-
-    if(file->attributes & DIRECTORY) {
         #ifdef FAT12_DEBUG
-            printFormat(LOGGER, " exit early (directory)\n");
+            printFormat(LOGGER, "\treading %d bytes @ lba=%d\n", SECTOR_SIZE, start);
         #endif
-        return;
-    }
+        /* read data */
+        (void)DiskOperationLBA(READ, 1 /* one sector */, start, drive, buffer);
 
-    startLogicalBlockAddressing = getFileStartLogicalBlockAddressingInData(file);
-
-    sectorsToRead = file->size / SECTOR_SIZE;
-    remainBytes = file->size % SECTOR_SIZE;
-
-    /* Edge case when file size is less that the sector */
-    if( (file->size < SECTOR_SIZE) && (sectorsToRead == 0) ) {
-        sectorsToRead = 1;
-        bytesCount = file->size;
-    } else {
-        bytesCount = SECTOR_SIZE;
-    }
-
-    while(sectorsToRead) {
-        (void)DiskOperationLBA(READ, 1 /* one sector */, startLogicalBlockAddressing, drive, buffer);
-        #ifdef FAT12_DEBUG
-            printFormat(LOGGER, "\treading %d bytes\n", bytesCount);
-        #endif
-
-        for(index=0; index<bytesCount; index++) {
+        for(index=0; index<SECTOR_SIZE; index++) {
             printCharacter(STDOUT, buffer[(unsigned)index]);
         }
 
-        sectorsToRead -= 1;
-        startLogicalBlockAddressing += 1;
-    }
-
-    if(remainBytes) {
-        (void)DiskOperationLBA(READ, 1 /* one sector */, startLogicalBlockAddressing, drive, buffer);
-        #ifdef FAT12_DEBUG
-            printFormat(LOGGER, "\treading remain %d bytes\n", remainBytes);
-        #endif
-
-        for(index=0; index<remainBytes; index++) {
-            printCharacter(STDOUT, buffer[(unsigned)index]);
-        }
-    }
-}
-
-static void showDirectory(unsigned char far *rootTable) {
-    struct FileInformation far *file;
-    unsigned int currentOffset = 0;
-    unsigned int filesCount = 0;
-    unsigned int directoriesCount = 0;
-
-    #ifdef FAT12_DEBUG
-        printFormat(LOGGER, "showDirectory\n");
-    #endif
-
-    while(currentOffset < bootSector.biosParameterBlock.rootEntries &&
-          rootTable[currentOffset] != NULL) {
-
-        file = (struct FileInformation far *)MK_FP(FP_SEG(rootTable), FP_OFF(rootTable) + currentOffset);
-        currentOffset += sizeof(struct FileInformation);
-
-        /* don't show */
-        if((file->name[0] == DELETED_FILE) || (file->attributes & VOLUME)) {
-            continue;
-        }
+        /* read FAT */
+        fat_offset = (cluster * 3) / 2;
+        cluster = *(unsigned int far *)MK_FP(FP_SEG(fatTable), FP_OFF(fatTable) + fat_offset);
 
         #ifdef FAT12_DEBUG
-            printCharacter(LOGGER, '\t');
-            printFileName(LOGGER, file->name, FILE_NAME_SIZE);
+        printFormat(LOGGER, "\t fat_offset =%d\n", fat_offset);
+        printFormat(LOGGER, "\tcluster from FAT = %d\n", cluster);
+        DebugBreak();
         #endif
 
-        printFileName(STDOUT, file->name, FILE_NAME_SIZE);
-        if(file->attributes & DIRECTORY) {
-            printFormat(STDOUT, " <dir>"); /* size is zero */
-            directoriesCount += 1;
-        } else {
-            printCharacter(STDOUT, '.');
-            printFileName(STDOUT, file->extension, FILE_EXTENSION_SIZE);
-            printFormat(STDOUT, " <file> %d", file->size);
-            filesCount += 1;
+        if(t & 1) {
+            cluster >>= 4;
             #ifdef FAT12_DEBUG
-                printCharacter(LOGGER, '.');
-                printFileName(LOGGER, file->extension, FILE_EXTENSION_SIZE);
-                printFormat(LOGGER, ", file size:%d", file->size);
+            printFormat(LOGGER, "\tcluster >>= 4 = %d\n", cluster);
             #endif
         }
-        #ifdef FAT12_DEBUG
-            printFormat(LOGGER, ", at root entry offset:%d, file lba:%d\n",
-                        currentOffset - sizeof(struct FileInformation),
-                        file->firstLogicalCluster);
-        #endif
-
-        printFormat(STDOUT, " %d:%d:%d", file->lastWriteTime.hour,
-                                         file->lastWriteTime.minutes,
-                                         file->lastWriteTime.doubleSeconds * 2);
-
-        printFormat(STDOUT, " %d-%d-%d\n", file->lastWriteDate.day,
-                                           file->lastWriteDate.month,
-                                           file->lastWriteDate.year + 1980);
-    }
-    printFormat(STDOUT, "files=%d, directories=%d\n", filesCount, directoriesCount);
-}
-
-static struct FileInformation far *openFilewithPath(unsigned char *path) {
-    /* TODO: 1. compact file name (remove space padding) 
-             2. start with root, no relative directory yet!
-             3. validate the path based on FAT12 naming rules
-    */
-    unsigned char *pathPointer = path;
-    unsigned char dirName[11];
-    unsigned int dirIndex;
-    unsigned int index;
-    unsigned char far *currentWorkingDirectory = NULL;
-    struct FileInformation far *dir;
-    unsigned int dirLBA;
-
-    /* Parse the path based on separator / */
-    for(index=0; pathPointer[index] != NULL; index++) {
-        dirIndex = 0;
-        while(pathPointer[index] != NULL && pathPointer[index] != '/') {
-           dirName[dirIndex++] = pathPointer[index++];
+        else {
+            printFormat(LOGGER, "\tcluster = %d\n", cluster);
+            cluster &= 0x0fff;
+            #ifdef FAT12_DEBUG
+            printFormat(LOGGER, "\tcluster &= 0x0fff = %d\n", cluster);
+            #endif
         }
 
-        if(dirName[0] == ' ') { /* root [          /] */
-            currentWorkingDirectory = rootEntriesTable;
-            continue;
+        if( (cluster == FAT12_BADSECTOR) || (cluster == FAT12_AVAILABLE) || 
+            (cluster == FAT12_INVALIDENTRY)) {
+                #ifdef FAT12_DEBUG
+                printFormat(LOGGER, "\t1st break, cluster=%d\n", cluster);
+                #endif
+                break;
         }
 
-        printFileName(STDOUT, dirName, 11);
-        printCharacter(STDOUT, '\n');
-
-        dir = getFileInformation(currentWorkingDirectory, (unsigned char far*)MK_FP(FP_SEG(dirName), FP_OFF(dirName)));
-        if(!dir) {
-            printFormat(STDOUT, "Error: dir not found\n");
-            return NULL;
-        }
-
-        if(!(dir->attributes & DIRECTORY)) { /* This is a file, so stop iterating */
+        if ((cluster >= FAT12_RESERVEDs) && (cluster <= FAT12_RESERVEDe)) {
+            #ifdef FAT12_DEBUG
+            printFormat(LOGGER, "\t2nd break, cluster=%d\n", cluster);
+            #endif
             break;
         }
 
-        dirLBA = getFileStartLogicalBlockAddressingInData(dir);
-        (void)DiskOperationLBA(READ, 1 /* one sector */, dirLBA, drive, buffer);
+        if ((cluster >= FAT12_LASTCLUSTERs) && (cluster <= FAT12_LASTCLUSTERe)) {
+            #ifdef FAT12_DEBUG
+            printFormat(LOGGER, "\t3rd break, cluster=%d\n", cluster);
+            #endif
+            break;
+        }
 
-        currentWorkingDirectory = buffer;
+        t = cluster;
     }
-
-    return dir;
 }
 
 void initializeFileSystem(unsigned char bootDrive) {
+    static char *fileName = "file1   txt";
     #ifdef FAT12_DEBUG
         struct FileInformation far *file = NULL;
         printFormat(LOGGER, "Initialize file system\n");
     #endif
 
-    buffer = (unsigned char far *) kmalloc(SECTOR_SIZE);
     drive = bootDrive;
+    buffer = (unsigned char far *)kmalloc(SECTOR_SIZE);
 
     initializeDisk(drive);
     readBootSectorInformation();
@@ -380,10 +273,7 @@ void initializeFileSystem(unsigned char bootDrive) {
     readRootEntriesTable();
     initializeFATDataAddress();
 
-    /* Testing sub folder */
-    showDirectory(rootEntriesTable);
-
-    file = openFilewithPath((unsigned char*)"           /dir1       /dir11      /file111 txt");
+    file = getFileInformation(rootEntriesTable, (unsigned char far*)MK_FP(FP_SEG(fileName), FP_OFF(fileName)));
     if(file) {
         showFile(file);
     }

@@ -31,7 +31,7 @@ BiosParameterBlock struc
     NumberOfFATs      DB 2
     RootEntries       DW 224
     TotalSectors      DW 2880
-    Media             DB 0f8h                  ;Media descriptor type (f0: 1.4 MB floppy, f8: hard disk)
+    Media             DB 0f0h                  ;Media descriptor type (f0: 1.4 MB floppy, f8: hard disk)
     SectorsPerFAT     DW 9
     SectorsPerTrack   DW 18
     HeadsPerCylinder  DW 2

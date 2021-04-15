@@ -99,6 +99,7 @@ int DiskOperationLBA(unsigned char operation, unsigned char numberOfSectors,
 void initializeDisk(unsigned char drive) {
     #ifdef DISK_DEBUG
         static char *bootDrive[] = {"floppy a", "floppy b", "harddisk 0", "harddisk 1"};
+        int status=0;
         printFormat(LOGGER, "Booting from %s\n", bootDrive[drive]);
     #endif
     

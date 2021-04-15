@@ -29,8 +29,7 @@ build/*
 # Emulator folder
 emulator/bochsout.txt
 emulator/bx_enh_dbg.ini
-emulator/floppya.img
-emulator/hd10meg.img
+emulator/*.img
 emulator/*.img.lock
 emulator/temp
 emulator/log.txt

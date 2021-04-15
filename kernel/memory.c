@@ -29,6 +29,9 @@
 #include <math.h> /* abs */
 #include <conio.h> /* printFormat */
 #include <string.h> /* memset */
+#ifdef KMEM_DEBUG
+    #include <kernel/debug.h>
+#endif
 
 unsigned long startAddress = NULL;
 unsigned long lastValidAddress = NULL;
@@ -64,7 +67,7 @@ void initializeMemory(unsigned int heapStart) {
     unsigned long currentAddress;
     unsigned long totalMemory;
 
-    startAddress = (unsigned long)((_CS << 4) + heapStart);
+    startAddress = (unsigned long)(((unsigned long)_CS << 4) + heapStart);
     lastValidAddress = getLastValidAddress();
     initializedAddress = startAddress; /* used in kmalloc to track the new regions*/
 
@@ -76,7 +79,7 @@ void initializeMemory(unsigned int heapStart) {
     #ifdef KMEM_DEBUG
     printFormat(LOGGER, "initialize memory:\n");
     printFormat(LOGGER, "\tKernel heap start @ %x:%x\n", _CS, heapStart);
-    printFormat(LOGGER, "\tprobe %d chuncks with size %x. remainChunkSize is %x\n", chunkSize, 0xffff, remainChunkSize);
+    printFormat(LOGGER, "\tprobe %x chuncks with size %x. remainChunkSize is %x\n", chunkSize, 0xffff, remainChunkSize);
     #endif
 
     currentAddress = startAddress;
@@ -87,6 +90,9 @@ void initializeMemory(unsigned int heapStart) {
     if(remainChunkSize) {
         memset(convertLinearAddressToFarPointer(currentAddress), NULL, remainChunkSize);
     }
+    #ifdef KMEM_DEBUG
+    DebugBreak();
+    #endif
 }
 
 /*
