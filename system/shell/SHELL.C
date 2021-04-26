@@ -34,20 +34,12 @@ void print(char *message) {
 }
 #endif
 int main(int argc, char* argv[]) {
-    unsigned char far *screen = (unsigned char far *)0xb80000000L;
-    unsigned char *message = "Direct Screen message";
-    const unsigned char color = 0x1e;
-    unsigned int index = 0;
     int exit=0;
     (void)argc;
     (void)argv;
 
-    _AX=3; asm int 0x10
-    while(*message) {
-        screen[ index * 2     ] = *message++;
-        screen[(index++ * 2) + 1] = color;
-    }
 
+    print("Shell is starting as user mode app");
     while(!exit);
 
     return 2021;
