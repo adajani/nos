@@ -27,9 +27,24 @@
 #include <kernel/version.h> /* MAJOR_VERSION, MINOR_VERSION */
 #include <conio.h> /* printFormat */
 #include <vector.h> /* setInterruptVector */
+#include <string.h> /* MK_FP */
+#ifdef SERVICE_DEBUG
+    #include <kernel/debug.h>
+#endif
 
 void initializeInterrupt(void) {
     setInterruptVector(KERNEL_INTERRUPT, kernelInterruptHandler);
+    setInterruptVector(DOS_INTERRUPT, DOSInterruptHandler);
+}
+
+#pragma argsused
+static void interrupt DOSInterruptHandler(unsigned int BP, unsigned int DI, unsigned int SI, unsigned int DS,
+                                             unsigned int ES, unsigned int DX, unsigned int CX, unsigned int BX,
+                                             unsigned int AX, unsigned int IP, unsigned int CS, unsigned int FLAGS) {
+    /* Wrapper interrupt to report DOS for future support */
+    #ifdef SERVICE_DEBUG
+        printFormat(LOGGER, "DOS service 0x21: AX=%x\n", AX);
+    #endif
 }
 
 #pragma argsused
@@ -47,6 +62,13 @@ static void interrupt kernelInterruptHandler(unsigned int BP, unsigned int DI, u
 
         case API_FREE:
             /* TODO */
+            break;
+
+        case API_STDOUT_PRINT:
+            #ifdef SERVICE_DEBUG
+            DebugBreak();
+            #endif
+            printFormat(STDOUT, "%s", (char*)MK_FP(ES, BX));
             break;
 
         /* TODO: add filesystem API */

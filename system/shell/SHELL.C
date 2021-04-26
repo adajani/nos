@@ -17,34 +17,38 @@
 * License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  *
 ************************************************************************/
 
-/*@file kmem.h
+/*@file imgwrt.c
 * @author Ahmad Dajani <eng.adajani@gmail.com>
-* @date 31 Dec 2020
-* @brief Kernel memory header file
+* @date 20 Apr 2021
+* @brief Shell
+* @description Command line interface
 */
+#if 0
+#define KERNEL_INTERRUPT 87
 
-#ifndef __KMEM_H
-    #define __KMEM_H
-
-    #define KMEM_DEBUG
-
-    #ifndef NULL
-        #define NULL 0
-    #endif
-
-    #define KMALLOC_PRIME_MAGIC 59473U
-
-    struct MemoryControlBlock {
-        unsigned int isInitialized : 1;
-        unsigned int isAvailable : 1;
-        unsigned int magic;
-        unsigned long size;
-    };
-
-    unsigned long getLastValidAddress(void);
-    void far *convertLinearAddressToFarPointer(unsigned long address);
-    void initializeMemory(unsigned int heapStart);
-    void far *kmalloc(unsigned long size);
-    void far *kmalloc_align(unsigned long size);
-    void kfree(void far *address);
+/* near pointer print */
+void print(char *message) {
+    _ES = _DS;
+    _BX = (int)message;
+    asm int KERNEL_INTERRUPT
+}
 #endif
+int main(int argc, char* argv[]) {
+    unsigned char far *screen = (unsigned char far *)0xb80000000L;
+    unsigned char *message = "Direct Screen message";
+    const unsigned char color = 0x1e;
+    unsigned int index = 0;
+    int exit=0;
+    (void)argc;
+    (void)argv;
+
+    _AX=3; asm int 0x10
+    while(*message) {
+        screen[ index * 2     ] = *message++;
+        screen[(index++ * 2) + 1] = color;
+    }
+
+    while(!exit);
+
+    return 2021;
+}

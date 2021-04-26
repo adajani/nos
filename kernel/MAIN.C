@@ -26,9 +26,11 @@
 */
 #include <kernel/memory.h> /* kmalloc, kfree */
 #include <kernel/service.h> /* NOS_INTR, initializeInterrupt */
-#include <kernel/fat12.h> /* initializeFileSystem */
-#include <kernel/disk.h> /* initializeDisk */
 #include <kernel/splash.h> /* showSplashScreen */
+#include <kernel/disk.h> /* initializeDisk */
+#include <kernel/fat12.h> /* initializeFAT12 */
+#include <kernel/filesys.h> /* initializeFileSystem */
+#include <kernel/exec.h> /* executeBinary */
 #include <conio.h> /* printFormat */
 #include <string.h> /* memset, size_t */
 
@@ -36,93 +38,16 @@ extern unsigned int _heapStart; /* @see c0t.asm */
 extern unsigned char bootDrive; /* @see c0t.asm */
 
 void main() {
-#if 0
-    #define SIZE 100
-    unsigned char *p;
-    unsigned char far *address = NULL;
-    unsigned int segment = 0;
-    unsigned int offset = 0;
-    char value = 'a';
-    size_t size = 0;
-    int i;
-    /*                   size  actual  buffer  null */
-    unsigned char buffer[1+    1+      SIZE+      1 ]={SIZE};
-#endif
-
+    int returnValue;
     showSplashScreen();
     initializeMemory(_heapStart);
+    initializeDisk(bootDrive);
+    initializeFAT12(bootDrive);
     initializeFileSystem(bootDrive);
     initializeInterrupt();
 
-    //TODO: load MZ files and execute shell
+    returnValue = executeBinary("/system     /shell   exe");
+    printFormat(STDOUT, "\nfinish, returned value=%d", returnValue);
 
-#if 0
-    /* create MCB */
-    printFormat(STDOUT, "Memory test\n");
-    for(i=0; i<9; i++) {
-        address = (unsigned char far *) kmalloc(0xffffL);
-        if(!address) {
-            printFormat(LOGGER, "Error: no memory\n");
-            asm hlt;
-        }
-        printFormat(STDOUT, "Allocate 0xffff bytes @ %x:%x\n", FP_SEG(address), FP_OFF(address));
-        memset(address, 'a' + i, 0xffff);
-    }
-
-    address = (unsigned char far *) kmalloc(0x98d4);
-    if(!address) {
-        printFormat(LOGGER, "\nError: no memory");
-        asm hlt;
-    }
-    printFormat(STDOUT, "Allocate 0x98d4 @ %x:%x\n", FP_SEG(address), FP_OFF(address));
-    memset(address, '$', 0x98d4);
-
-    /* Free */
-    printFormat(STDOUT, "Free address %x:%x\n", FP_SEG(address), FP_OFF(address));
-    kfree(address);
-
-    address = (unsigned char far *) kmalloc(0x200);
-    if(!address) {
-        printFormat(LOGGER, "\nError: no memory");
-        asm hlt;
-    }
-    printFormat(STDOUT, "Allocate 0x200 @ %x:%x\n", FP_SEG(address), FP_OFF(address));
-    memset(address, '!', 0x200);
-
-    //interrupt
-    printFormat(STDOUT, "Testing interrupt:\n");
-    _AX = 0xaabb;
-    asm {
-        int KERNEL_INTERRUPT
-    }
-    printFormat(STDOUT, "Interrupt return value %x\n", _CX);
-
-
-    /* Main memory tester */
-    while(1) {
-        printFormat(STDOUT, "\nEnter segment in hex:");
-        p = readString(buffer);
-        segment = convertHexStringToInteger(p);
-
-        printFormat(STDOUT, "\nEnter offset in hex:");
-        p = readString(buffer);
-        offset = convertHexStringToInteger(p);
-
-        printFormat(STDOUT, "\nEnter value in hex:");
-        p = readString(buffer);
-        value = convertHexStringToInteger(p);
-
-        printFormat(STDOUT, "\nEnter size in hex:");
-        p = readString(buffer);
-        size = convertHexStringToInteger(p);
-
-        address = MK_FP(segment, offset);
-        memset(address, value, size);
-        printFormat(STDOUT, "\n-------> DONE");
-
-        if(p[0]=='x') break;
-    }
-    printFormat(STDOUT, "\nBye:)\n");
-#endif
-    asm hlt
+    while(1);
 }

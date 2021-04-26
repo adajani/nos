@@ -27,16 +27,22 @@
 #ifndef __SERVICE_H
     #define __SERVICE_H
 
+    /* #define SERVICE_DEBUG */
     #define KERNEL_INTERRUPT 87
+    #define DOS_INTERRUPT 0x21
 
     enum KERNEL_API {
         API_KERNEL_VERSION = 0,
         API_MALLOC = 1,
-        API_FREE = 2
+        API_FREE = 2,
+        API_STDOUT_PRINT = 3
     };
 
     void initializeInterrupt(void);
     void interrupt kernelInterruptHandler(unsigned int BP, unsigned int DI, unsigned int SI, unsigned int DS,
                                           unsigned int ES, unsigned int DX, unsigned int CX, unsigned int BX,
                                           unsigned int AX, unsigned int IP, unsigned int CS, unsigned int FLAGS);
+    void interrupt DOSInterruptHandler(unsigned int BP, unsigned int DI, unsigned int SI, unsigned int DS,
+                                       unsigned int ES, unsigned int DX, unsigned int CX, unsigned int BX,
+                                       unsigned int AX, unsigned int IP, unsigned int CS, unsigned int FLAGS);
 #endif

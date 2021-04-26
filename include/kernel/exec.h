@@ -17,34 +17,50 @@
 * License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  *
 ************************************************************************/
 
-/*@file kmem.h
+/*@file exec.h
 * @author Ahmad Dajani <eng.adajani@gmail.com>
-* @date 31 Dec 2020
-* @brief Kernel memory header file
+* @date 20 Apr 2021
+* @brief Execute binary files header
 */
 
-#ifndef __KMEM_H
-    #define __KMEM_H
+#ifndef __EXEC_H
+    #define __EXEC_H
+    #define EXEC_DEBUG
 
-    #define KMEM_DEBUG
+    #define EXE_SIGNATURE 0x5a4d
 
-    #ifndef NULL
-        #define NULL 0
-    #endif
+    /*@note: all registers should be stored in data segment before
+             far jump, because we are changing the stack.
+    */
+    #define FAR_JUMP(_ss_, _sp_, _cs_, _ip_) do { \
+        asm { mov ss, word ptr _ss_ }\
+        asm { mov sp, word ptr _sp_ }\
+        asm { push    word ptr _cs_ }\
+        asm { push    word ptr _ip_ }\
+        asm { DB 0xCB               }\
+        } while(0);
 
-    #define KMALLOC_PRIME_MAGIC 59473U
-
-    struct MemoryControlBlock {
-        unsigned int isInitialized : 1;
-        unsigned int isAvailable : 1;
-        unsigned int magic;
-        unsigned long size;
+    struct ExecutableFile {
+        unsigned int signature; /* MZ */
+        unsigned int imageLength; /* mod 512 */
+        unsigned int fileSize; /* in 512 byte pages */
+        unsigned int relocationItems;
+        unsigned int headerSize; /* in 16 byte paragraphs */
+        unsigned int minParagraphs;
+        unsigned int maxParagraphs;
+        unsigned int stackSegment; /* in paras */
+        unsigned int stackPointer;
+        unsigned int checksum; /* negative of pgm */
+        unsigned int instructionPointer;
+        unsigned int codeSegment;
+        unsigned int relocationItemOffset;
+        unsigned int overlayNumber; /* 0 for root program */
     };
 
-    unsigned long getLastValidAddress(void);
-    void far *convertLinearAddressToFarPointer(unsigned long address);
-    void initializeMemory(unsigned int heapStart);
-    void far *kmalloc(unsigned long size);
-    void far *kmalloc_align(unsigned long size);
-    void kfree(void far *address);
+    struct RelocationTable {
+        unsigned int offset;
+        unsigned int segment;
+    };
+
+    int executeBinary(char *path);
 #endif

@@ -40,7 +40,7 @@ BiosParameterBlock struc
 BiosParameterBlock ends
 
 BootSector struc
-    OemName           DB "NOS/NOS", NULL       ;8 bytes
+    OemName           DB "NOS/NOS!"            ;8 bytes
     Bpb               BiosParameterBlock <>
     DriveNumber       DB 0                     ;Physical disk number. (0) is the A drive disk, hard disks start at 0x80.
     Unused            DB 0                     ;Current Head. Unused in FAT file system. (0)

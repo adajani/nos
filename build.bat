@@ -53,4 +53,11 @@ cd kernel
     make
 cd ..
 
+echo **** System ****
+cd system
+    cd shell
+        make
+    cd ..
+cd ..
+
 echo **** DONE ****

@@ -33,7 +33,7 @@ a FAT12 file system contains 1.5 bytes per cluster within the file allocation ta
     /* @link: https://www.eit.lth.se/fileadmin/eit/courses/eitn50/Literature/fat12_description.pdf */
     #include <conio.h> / * PRINT_STREAM */
 
-    /* #define FAT12_DEBUG */
+    #define FAT12_DEBUG
 
     #define FAT12_BADSECTOR    0x0ff7
     #define FAT12_INVALIDENTRY 0x0001
@@ -107,16 +107,14 @@ a FAT12 file system contains 1.5 bytes per cluster within the file allocation ta
         unsigned long size; /* in bytes */
     };
 
-    void initializeFileSystem(unsigned char bootDrive);
+    void initializeFAT12(unsigned char bootDrive);
     void readBootSectorInformation(void);
     void readFATtable(void);
     void readRootEntriesTable(void);
-    void printFileName(enum PRINT_STREAM stream, unsigned char far *name, unsigned int size);
-    void showDirectory(unsigned char far *rootTable);
     void initializeFATDataAddress(void);
     unsigned int isFileNamesEqual(unsigned char far *fileName1, unsigned char far *fileName2);
     struct FileInformation far *getFileInformation(unsigned char far *rootTable, unsigned char far *fileName);
-    void showFile(struct FileInformation far *file);
     unsigned int getFileStartLogicalBlockAddressingInData(unsigned int cluster);
-    struct FileInformation far *openFilewithPath(unsigned char *path);
+    unsigned char far *getFatTable(void);
+    unsigned char far *getRootEntriesTable(void);
 #endif

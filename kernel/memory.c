@@ -95,6 +95,94 @@ void initializeMemory(unsigned int heapStart) {
     #endif
 }
 
+
+/* Return an address with segment:0 which is compatible to run EXE 
+   TODO: utilized allocated aligned blocks
+*/
+void far *kmalloc_align(unsigned long size) {
+    struct MemoryControlBlock far *currentMemoryControlBlock = NULL;
+    unsigned long newAddress = 0;
+    unsigned long aligned_address = 0;
+    void far *ret = NULL;
+
+    #ifdef KMEM_DEBUG
+    printFormat(LOGGER, "kmalloc_align:");
+    #endif
+
+    size += sizeof(struct MemoryControlBlock);
+
+    /* Try to allocate new MCB struct */
+    if(abs((long)lastValidAddress - (long)initializedAddress) < size) {
+        #ifdef KMEM_DEBUG
+        printFormat(LOGGER, "no free memory\n");
+        #endif        
+        return NULL; /* no free space */
+    }
+
+    currentMemoryControlBlock = (struct MemoryControlBlock far *)initializedAddress;
+    currentMemoryControlBlock->isInitialized = 1;
+    currentMemoryControlBlock->magic = KMALLOC_PRIME_MAGIC;
+
+    newAddress = (long)initializedAddress + sizeof(struct MemoryControlBlock);
+    /* already aligned */
+    if(FP_OFF((void far *)newAddress) == 0) {
+        #ifdef KMEM_DEBUG
+        printFormat(LOGGER, "address is aligned\n");
+        #endif
+        currentMemoryControlBlock->isAvailable = 0;
+        currentMemoryControlBlock->size = size;
+        ret = convertLinearAddressToFarPointer(newAddress);
+        initializedAddress += size;
+        return ret;
+    }
+
+    #ifdef KMEM_DEBUG
+    printFormat(LOGGER, "address is not aligned @ offset=%d\n", FP_OFF((void far *)newAddress));
+    #endif
+    /* search for alligned address */
+    aligned_address = newAddress;
+    while(aligned_address < (long)lastValidAddress && FP_OFF(aligned_address) != 0) {
+        aligned_address += 1;
+    }
+
+    #ifdef KMEM_DEBUG
+    printFormat(LOGGER, "Mark address @ offset=%d as free\n", FP_OFF((void far *)initializedAddress));
+    #endif
+
+    /*  mark old MCB as free */
+    currentMemoryControlBlock->isAvailable = 1;
+    currentMemoryControlBlock->size = aligned_address - newAddress;
+    #ifdef KMEM_DEBUG
+    printFormat(LOGGER, "adjust address to offset=%d\n", FP_OFF((void far *)newAddress));
+    #endif
+
+    /* is there memory after alignment ? */
+    if(abs((long)lastValidAddress - ((long)initializedAddress+(long)currentMemoryControlBlock->size)) < size) {
+        #ifdef KMEM_DEBUG
+        printFormat(LOGGER, "no free memoery after alignment\n");
+        #endif
+        return NULL; /* no free space */
+    }
+
+    initializedAddress += currentMemoryControlBlock->size;
+
+    /* new block */
+    currentMemoryControlBlock = (struct MemoryControlBlock far *)initializedAddress;
+    currentMemoryControlBlock->isInitialized = 1;
+    currentMemoryControlBlock->isAvailable = 0;
+    currentMemoryControlBlock->size = size;
+    currentMemoryControlBlock->magic = KMALLOC_PRIME_MAGIC;
+
+    ret = convertLinearAddressToFarPointer(initializedAddress + sizeof(struct MemoryControlBlock));
+    
+    #ifdef KMEM_DEBUG
+    printFormat(LOGGER, "new aligned address at offset=%d\n", FP_OFF((void far *)ret));
+    #endif
+    
+    initializedAddress += size;
+    return ret;
+}
+
 /*
     - all available memory can be allocated
     - blocks larger than 64k can be allocated

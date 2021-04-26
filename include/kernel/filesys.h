@@ -17,34 +17,46 @@
 * License along with NOS.  If not, see <http://www.gnu.org/licenses/>.  *
 ************************************************************************/
 
-/*@file kmem.h
+/*@file filesys.h
 * @author Ahmad Dajani <eng.adajani@gmail.com>
-* @date 31 Dec 2020
-* @brief Kernel memory header file
+* @date 20 Apr 2021
+* @brief File system interface header
 */
 
-#ifndef __KMEM_H
-    #define __KMEM_H
+#ifndef __FILESYS_H
+    #define __FILESYS_H
+    #include <kernel/disk.h> /* initializeDisk */
+    #include <kernel/fat12.h> /* initializeFAT12, getFatTable */
 
-    #define KMEM_DEBUG
+    /* #define FILESYS_DEBUG */
 
-    #ifndef NULL
-        #define NULL 0
-    #endif
-
-    #define KMALLOC_PRIME_MAGIC 59473U
-
-    struct MemoryControlBlock {
-        unsigned int isInitialized : 1;
-        unsigned int isAvailable : 1;
-        unsigned int magic;
-        unsigned long size;
+    struct ClusterChain {
+        unsigned int cluster;
+        unsigned int size;
+        struct ClusterChain far *next;
     };
 
-    unsigned long getLastValidAddress(void);
-    void far *convertLinearAddressToFarPointer(unsigned long address);
-    void initializeMemory(unsigned int heapStart);
-    void far *kmalloc(unsigned long size);
-    void far *kmalloc_align(unsigned long size);
-    void kfree(void far *address);
+    struct File {
+        int fileId;
+        unsigned int processId;
+        unsigned char name[FILE_NAME_SIZE];
+        unsigned char extension[FILE_EXTENSION_SIZE];
+        unsigned long size;
+        struct FileTime creationTime;
+        struct FileDate creationDate;
+        struct FileDate lastAccessDate;
+        struct FileTime lastWriteTime;
+        struct FileDate lastWriteDate;
+        struct ClusterChain far *clusterChain;
+    };
+
+    struct File far *fopen(char *path);
+    struct FileInformation far *openPath(char *path);
+    struct FileInformation far *readDirectoryContent(unsigned int cluster, char *fileNameNext);
+    struct ClusterChain far *buildFileClusterChain(struct FileInformation far *fileInformation);
+    void fclose(struct File far *file);
+    void loadFile(struct File far *file, unsigned char far *outBuffer);
+    void printFileName(enum PRINT_STREAM stream, unsigned char far *name, unsigned int size);
+    void showDirectory(unsigned char far *rootTable);
+    void initializeFileSystem(unsigned char bootDrive);
 #endif
