@@ -39,18 +39,25 @@ void initializeInterrupt(void) {
 
 #pragma argsused
 static void interrupt DOSInterruptHandler(unsigned int BP, unsigned int DI, unsigned int SI, unsigned int DS,
-                                             unsigned int ES, unsigned int DX, unsigned int CX, unsigned int BX,
-                                             unsigned int AX, unsigned int IP, unsigned int CS, unsigned int FLAGS) {
+                                          unsigned int ES, unsigned int DX, unsigned int CX, unsigned int BX,
+                                          unsigned int AX, unsigned int IP, unsigned int CS, unsigned int FLAGS) {
     /* Wrapper interrupt to report DOS for future support */
     #ifdef SERVICE_DEBUG
         printFormat(LOGGER, "DOS service 0x21: AX=%x\n", AX);
     #endif
+    switch(AX >> 8) {
+        case 0:
+        case 0x4c:
+            printFormat(LOGGER, "DOS terminate with value %x\n", AX & 0xf);
+            break;
+    }
 }
 
 #pragma argsused
 static void interrupt kernelInterruptHandler(unsigned int BP, unsigned int DI, unsigned int SI, unsigned int DS,
                                              unsigned int ES, unsigned int DX, unsigned int CX, unsigned int BX,
                                              unsigned int AX, unsigned int IP, unsigned int CS, unsigned int FLAGS) {
+    char far *string;
     switch(AX >> 8) { /* AH */
         case API_KERNEL_VERSION:
             CX = (MAJOR_VERSION << 8) + MINOR_VERSION;
@@ -68,7 +75,10 @@ static void interrupt kernelInterruptHandler(unsigned int BP, unsigned int DI, u
             #ifdef SERVICE_DEBUG
             DebugBreak();
             #endif
-            printFormat(STDOUT, "%s", (char*)MK_FP(ES, BX));
+            string = (char far *)MK_FP(ES, BX);
+            while(*string) {
+                printCharacter(STDOUT, *string++);
+            }
             break;
 
         /* TODO: add filesystem API */
